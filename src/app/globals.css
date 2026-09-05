@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+/* ONE file to change per site. Swapping --accent and --ground gives each of
+   the 26 builds its own identity in about thirty seconds. Do NOT build a
+   shared design system - twenty-six sites that look identical read as a
+   template farm, which is the opposite of what the challenge is selling. */
+@theme {
+  --color-ground: #f4f5f7;
+  --color-surface: #ffffff;
+  --color-ink: #14181b;
+  --color-muted: #5b6670;
+  --color-rule: #dfe3e7;
+  --color-accent: #1f5f5b;
+  --color-accent-soft: #dfeeeb;
+  --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: ui-serif, Georgia, Cambria, serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-ground: #0e1215;
+    --color-surface: #151a1f;
+    --color-ink: #e5eaed;
+    --color-muted: #97a4ae;
+    --color-rule: #263037;
+    --color-accent: #58beb1;
+    --color-accent-soft: #12302e;
+  }
+}
+:root[data-theme="dark"] {
+  --color-ground: #0e1215;
+  --color-surface: #151a1f;
+  --color-ink: #e5eaed;
+  --color-muted: #97a4ae;
+  --color-rule: #263037;
+  --color-accent: #58beb1;
+  --color-accent-soft: #12302e;
+}
+
+html, body { background: var(--color-ground); color: var(--color-ink); }
+body { font-family: var(--font-body); }
