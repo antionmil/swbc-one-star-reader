@@ -20,6 +20,7 @@
   --color-loud: #b3312a;     /*  6.20 on ground ·  5.88 on surface — the biggest complaint */
   --color-warn: #8a5a09;     /*  5.92 on ground ·  5.62 on surface — the second */
   --color-link: #1b4fb0;     /*  7.52 on ground ·  7.14 on surface */
+  --color-live: #1f7a44;     /*  5.55 on ground ·  5.28 on surface — the live dot */
 
   --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -38,6 +39,7 @@
     --color-loud: #ff8878;   /*  8.07 on ground ·  7.49 on surface */
     --color-warn: #e3a94a;   /*  8.96 on ground ·  8.32 on surface */
     --color-link: #8fb4ff;   /*  9.05 on ground ·  8.40 on surface */
+    --color-live: #6fce9a;   /*  9.79 on ground ·  9.09 on surface */
   }
 }
 :root[data-theme="dark"] {
@@ -51,6 +53,7 @@
   --color-loud: #ff8878;
   --color-warn: #e3a94a;
   --color-link: #8fb4ff;
+  --color-live: #6fce9a;
 }
 
 html, body { background: var(--color-ground); color: var(--color-ink); }
@@ -58,6 +61,15 @@ body { font-family: var(--font-body); }
 
 /* Counts line up under each other down the page. */
 .tnum { font-variant-numeric: tabular-nums; }
+
+/* The live dot. Held still for anybody who asked their system for less
+   motion — a pulsing dot is exactly what that setting is for. */
+.pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+@keyframes pulse {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 0; transform: scale(2.2); }
+}
+@media (prefers-reduced-motion: reduce) { .pulse { animation: none; } }
 
 a { color: inherit; }
 :focus-visible { outline: 2px solid var(--color-link); outline-offset: 2px; }

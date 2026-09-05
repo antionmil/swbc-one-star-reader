@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Here } from "@/components/Here";
 
 /** The masthead and the footer, on every page. */
 export function Sheet({
@@ -20,6 +21,10 @@ export function Sheet({
           {!home && <span className="sr-only">— back to the wire</span>}
         </Link>
         {right && <span className="tnum font-mono text-[11px] text-faint">{right}</span>}
+      </div>
+
+      <div className="mt-3.5">
+        <Here />
       </div>
 
       {children}

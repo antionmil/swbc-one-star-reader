@@ -137,3 +137,30 @@ export const requests = pgTable("requests", {
   who: text("who").notNull(),
   at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [index("requests_app_idx").on(t.app_id), index("requests_who_idx").on(t.who, t.at)]);
+
+/* ------------------------------------------------------------------------ *
+ * Who is reading this, right now.
+ *
+ * A visitor is a salted one-way hash of their address. No cookie, nothing
+ * written to their browser, and no way back from the hash to the address. The
+ * live rows are deleted after five minutes, so the table can say how many
+ * people are here and can never say who.
+ * ------------------------------------------------------------------------ */
+
+export const presence = pgTable("presence", {
+  id: text("id").primaryKey(),
+  seen_at: timestamp("seen_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index("presence_seen_idx").on(t.seen_at)]);
+
+/** One row per visitor per day, swept after eight days. It exists only to tell
+ *  a returning visitor from a new one on the same day. */
+export const visitDays = pgTable("visit_days", {
+  day: text("day").notNull(),
+  id: text("id").notNull(),
+}, (t) => [primaryKey({ columns: [t.day, t.id] })]);
+
+/** A bare count per day with nobody in it, so it can be kept for good. */
+export const visitTotals = pgTable("visit_totals", {
+  day: text("day").primaryKey(),
+  n: integer("n").notNull().default(0),
+});
