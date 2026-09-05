@@ -87,3 +87,28 @@ export const clusters = pgTable("clusters", {
   run_id: integer("run_id").notNull(),
   at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [index("clusters_app_idx").on(t.app_id, t.store, t.run_id)]);
+
+/**
+ * The daily rating reading, per app per storefront.
+ *
+ * This is the part that moves every day. Apple's REVIEW feed refuses
+ * datacentre addresses — GitHub's runners got zero of six pages, and two other
+ * cloud addresses got nothing either — but the LOOKUP endpoint answers happily
+ * from anywhere. So the score, the number of ratings and the shipped version
+ * are collected on the site's own cron, and the reviews are topped up whenever
+ * Apple lets a page through from somewhere else.
+ *
+ * One row per app, storefront and day: `day` is a plain YYYY-MM-DD string, so
+ * a second run on the same day corrects that day rather than adding a fake
+ * data point.
+ */
+export const ratings = pgTable("ratings", {
+  app_id: text("app_id").notNull(),
+  store: text("store").notNull(),
+  day: text("day").notNull(),
+  average: real("average"),
+  count: integer("count"),
+  version: text("version"),
+  released_at: timestamp("released_at", { withTimezone: true }),
+  at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [primaryKey({ columns: [t.app_id, t.store, t.day] })]);

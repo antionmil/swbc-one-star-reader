@@ -62,3 +62,40 @@ export async function fetchPage(appId: string, store: string, page: number): Pro
   }
   return out;
 }
+
+export type Lookup = {
+  name: string;
+  average: number | null;
+  count: number | null;
+  version: string | null;
+  released_at: string | null;
+};
+
+/**
+ * The rating, the number of ratings and the shipped version.
+ *
+ * Unlike the review feed, this endpoint answers a datacentre address without
+ * complaint — verified from two separate cloud networks — which is why the
+ * daily movement on this site is built on it.
+ */
+export async function lookup(appId: string, store: string): Promise<Lookup | null> {
+  try {
+    const res = await fetch(`https://itunes.apple.com/lookup?id=${appId}&country=${store}`, {
+      headers: { "user-agent": "onestarreader.onedaybuilt.com (+one website a day)" },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const d = (await res.json()) as { results?: Record<string, unknown>[] };
+    const r = d.results?.[0];
+    if (!r) return null;
+    return {
+      name: String(r.trackName ?? ""),
+      average: typeof r.averageUserRating === "number" ? r.averageUserRating : null,
+      count: typeof r.userRatingCount === "number" ? r.userRatingCount : null,
+      version: r.version ? String(r.version) : null,
+      released_at: r.currentVersionReleaseDate ? String(r.currentVersionReleaseDate) : null,
+    };
+  } catch {
+    return null;
+  }
+}

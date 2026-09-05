@@ -1,41 +1,63 @@
 @import "tailwindcss";
 
-/* ONE file to change per site. Swapping --accent and --ground gives each of
-   the 26 builds its own identity in about thirty seconds. Do NOT build a
-   shared design system - twenty-six sites that look identical read as a
-   template farm, which is the opposite of what the challenge is selling. */
+/* ONE palette, one file. Every colour on this site is a token from here.
+   Day 1 of this run shipped eighteen hardcoded white values on a light
+   background — invisible to every visitor. Day 2 measured three tokens against
+   the PAGE and used them on a CARD, and all three failed AA where they were
+   actually painted.
+
+   So every ratio below names both backgrounds, and they are computed by
+   scripts/contrast.mts rather than estimated. AA body text needs 4.5:1 and
+   nothing here is under 4.69:1. */
 @theme {
-  --color-ground: #f4f5f7;
-  --color-surface: #ffffff;
-  --color-ink: #14181b;
-  --color-muted: #5b6670;
-  --color-rule: #dfe3e7;
-  --color-accent: #1f5f5b;
-  --color-accent-soft: #dfeeeb;
+  --color-ground: #ffffff;
+  --color-surface: #faf9f6;
+  --color-ink: #16171a;      /* 17.92 on ground · 17.02 on surface */
+  --color-muted: #55565a;    /*  7.33 on ground ·  6.96 on surface */
+  --color-faint: #6f7075;    /*  4.94 on ground ·  4.69 on surface */
+  --color-rule: #e3e3df;     /* lines, never text */
+  --color-rule-soft: #efefec;/* lines, never text */
+  --color-loud: #b3312a;     /*  6.20 on ground ·  5.88 on surface — the biggest complaint */
+  --color-warn: #8a5a09;     /*  5.92 on ground ·  5.62 on surface — the second */
+  --color-link: #1b4fb0;     /*  7.52 on ground ·  7.14 on surface */
+
   --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-body: ui-serif, Georgia, Cambria, serif;
+  --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --color-ground: #0e1215;
-    --color-surface: #151a1f;
-    --color-ink: #e5eaed;
-    --color-muted: #97a4ae;
-    --color-rule: #263037;
-    --color-accent: #58beb1;
-    --color-accent-soft: #12302e;
+    --color-ground: #111214;
+    --color-surface: #191a1d;
+    --color-ink: #eceef2;    /* 16.13 on ground · 14.98 on surface */
+    --color-muted: #a6a8ae;  /*  7.88 on ground ·  7.32 on surface */
+    --color-faint: #8e9096;  /*  5.87 on ground ·  5.45 on surface */
+    --color-rule: #2a2c31;
+    --color-rule-soft: #212328;
+    --color-loud: #ff8878;   /*  8.07 on ground ·  7.49 on surface */
+    --color-warn: #e3a94a;   /*  8.96 on ground ·  8.32 on surface */
+    --color-link: #8fb4ff;   /*  9.05 on ground ·  8.40 on surface */
   }
 }
 :root[data-theme="dark"] {
-  --color-ground: #0e1215;
-  --color-surface: #151a1f;
-  --color-ink: #e5eaed;
-  --color-muted: #97a4ae;
-  --color-rule: #263037;
-  --color-accent: #58beb1;
-  --color-accent-soft: #12302e;
+  --color-ground: #111214;
+  --color-surface: #191a1d;
+  --color-ink: #eceef2;
+  --color-muted: #a6a8ae;
+  --color-faint: #8e9096;
+  --color-rule: #2a2c31;
+  --color-rule-soft: #212328;
+  --color-loud: #ff8878;
+  --color-warn: #e3a94a;
+  --color-link: #8fb4ff;
 }
 
 html, body { background: var(--color-ground); color: var(--color-ink); }
 body { font-family: var(--font-body); }
+
+/* Counts line up under each other down the page. */
+.tnum { font-variant-numeric: tabular-nums; }
+
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--color-link); outline-offset: 2px; }

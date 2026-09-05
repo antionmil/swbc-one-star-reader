@@ -1,41 +1,48 @@
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
+import { collectRatings, reclusterStale } from "@/lib/jobs";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300;
+export const dynamic = "force-dynamic";
 
 /**
- * Cron entry point. Wire jobs in vercel.json:
- *   { "crons": [{ "path": "/api/cron/refresh", "schedule": "0 6 * * *" }] }
+ * Secret-gated. Vercel Cron sends `Authorization: Bearer $CRON_SECRET`, and
+ * anybody else gets a 401 with no hint about which jobs exist.
  *
- * Hobby allows one firing a day with hour-level precision; Pro gives
- * per-minute. You are on Pro anyway, because sponsor slots are advertisements
- * and Vercel's Hobby terms name advertisements as commercial use.
- *
- * Every job here should end by WRITING AN ARTIFACT, not by leaving data that
- * the request path has to query. Use the Batch API inside these - 50% off and
- * nobody is waiting.
+ * A guard is only a guard once you have fired the thing it exists to stop, so
+ * this one is fired at: qa/cron.test.mts.
  */
-const JOBS: Record<string, () => Promise<unknown>> = {};
+const JOBS: Record<string, () => Promise<unknown>> = {
+  daily: async () => {
+    const ratings = await collectRatings();
+    const clusters = await reclusterStale();
+    /* Push it out now rather than waiting for each page's hour to expire. Day 4
+       shipped a corrected figure, watched the deployment go READY, and served
+       the old number for an hour. */
+    revalidatePath("/", "layout");
+    return { ratings, clusters };
+  },
+  refresh: async () => {
+    revalidatePath("/", "layout");
+    return { revalidated: "every page" };
+  },
+};
 
 export async function GET(req: Request, { params }: { params: Promise<{ job: string }> }) {
   const secret = process.env.CRON_SECRET;
-  const auth = req.headers.get("authorization");
-  if (secret && auth !== `Bearer ${secret}`) {
+  if (!secret) return NextResponse.json({ error: "CRON_SECRET is not set" }, { status: 500 });
+  if (req.headers.get("authorization") !== `Bearer ${secret}`)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
 
   const { job } = await params;
   const fn = JOBS[job];
-  if (!fn) return NextResponse.json({ error: `Unknown job "${job}"` }, { status: 404 });
+  if (!fn) return NextResponse.json({ error: "Unknown job" }, { status: 404 });
 
   const started = Date.now();
   try {
-    const result = await fn();
-    return NextResponse.json({ ok: true, job, ms: Date.now() - started, result });
+    return NextResponse.json({ ok: true, job, ms: Date.now() - started, result: await fn() });
   } catch (e) {
-    return NextResponse.json(
-      { ok: false, job, error: e instanceof Error ? e.message : String(e) },
-      { status: 500 },
-    );
+    return NextResponse.json({ ok: false, job, error: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }
 }
