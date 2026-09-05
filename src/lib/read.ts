@@ -84,11 +84,18 @@ async function load(): Promise<Snapshot> {
   const views: AppView[] = apps.map((app) => {
     /* Richest storefront first. Sorting the codes alphabetically put Germany
        above the United States on every app, which buried the storefront the
-       corpus actually knows most about. */
-    const stores = counts
+       corpus actually knows most about.
+
+       An app with no reviews at all still has a rating, and its page has to be
+       able to say "watched, not read yet" instead of rendering a bare title —
+       which is what 421 of the 441 apps did until this fallback existed. */
+    const withReviews = counts
       .filter((c) => c.app_id === app.id)
       .sort((x, y) => y.read - x.read || x.store.localeCompare(y.store))
       .map((c) => c.store);
+    const stores = withReviews.length
+      ? withReviews
+      : [...new Set(ratings.filter((r) => r.app_id === app.id).map((r) => r.store))];
     return {
       app,
       stores: stores.map((store) => {

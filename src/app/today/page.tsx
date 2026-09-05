@@ -60,8 +60,8 @@ export default async function Today() {
       </h1>
       <p className="mt-3.5 max-w-[58ch] text-[16px] leading-relaxed text-muted">
         Every morning the score, the number of ratings and the shipped version are read
-        again for all twenty apps. A rating that slides after a release is the thing this
-        page exists to catch.
+        again for all {s.apps.length} apps on the watchlist. A rating that slides after a
+        release is the thing this page exists to catch.
       </p>
 
       <section className="mt-9">

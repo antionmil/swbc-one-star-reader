@@ -18,13 +18,29 @@ import { sql } from "@/lib/db";
 
 export async function collectRatings() {
   const db = sql();
+  /* EVERY app, not only the ones whose reviews we have read. 421 of the 441
+     are watched-only, and their whole value is a live rating — which they were
+     not getting, because this asked the reviews table which storefronts to
+     read and a watched app has no reviews. */
   const rows = (await db`
-    select distinct r.app_id, r.store from reviews r order by 1, 2`) as unknown as { app_id: string; store: string }[];
+    select a.id as app_id, s.store
+    from apps a cross join (values ('us'), ('de')) as s(store)
+    order by a.id, s.store`) as unknown as { app_id: string; store: string }[];
   const day = new Date().toISOString().slice(0, 10);
+  /* Eight at a time. 882 lookups one after another is four minutes, and the
+     function ceiling is five. */
   let ok = 0;
-  for (const r of rows) {
+  let i = 0;
+  const workers = Array.from({ length: 8 }, async () => {
+    while (i < rows.length) {
+      const r = rows[i++];
+      await one(r);
+    }
+  });
+
+  async function one(r: { app_id: string; store: string }) {
     const l = await lookup(r.app_id, r.store);
-    if (!l) continue;
+    if (!l) return;
     if (l.artwork) await db`update apps set artwork = ${l.artwork} where id = ${r.app_id}`;
     await db`
       insert into ratings (app_id, store, day, average, count, version, released_at)
@@ -35,6 +51,8 @@ export async function collectRatings() {
         version = excluded.version, released_at = excluded.released_at, at = now()`;
     ok++;
   }
+
+  await Promise.all(workers);
   return { asked: rows.length, stored: ok, day };
 }
 
