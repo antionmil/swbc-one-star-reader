@@ -37,7 +37,12 @@ export async function GET(req: NextRequest) {
            exists (select 1 from clusters c where c.app_id = a.id) as read
     from apps a
     where a.name ilike ${"%" + q + "%"}
-    order by (select max(r.count) from ratings r where r.app_id = a.id) desc nulls last
+    /* A plain popularity sort put "FaceApp: Gesichtsbearbeitung" above "Bear"
+       for the query "bear", because ILIKE happily matches inside a German
+       compound. Name-starts-with first, then word-starts-with, then size. */
+    order by (a.name ilike ${q + "%"}) desc,
+             (a.name ilike ${"% " + q + "%"}) desc,
+             (select max(r.count) from ratings r where r.app_id = a.id) desc nulls last
     limit 8`) as unknown as (Omit<Hit, "state"> & { read: boolean })[];
 
   const hits: Hit[] = mine.map((m) => ({
