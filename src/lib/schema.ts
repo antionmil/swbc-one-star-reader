@@ -18,6 +18,9 @@ export const apps = pgTable("apps", {
    *  lookup endpoint answers datacentre addresses and the review feed does
    *  not. */
   artwork: text("artwork"),
+  /** How this app got here: "chart" for the imported top lists, "seed" for the
+   *  twenty read on day one, "request" for one somebody asked for. */
+  source: text("source").notNull().default("chart"),
   added_at: timestamp("added_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -116,3 +119,21 @@ export const ratings = pgTable("ratings", {
   released_at: timestamp("released_at", { withTimezone: true }),
   at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [primaryKey({ columns: [t.app_id, t.store, t.day] })]);
+
+/**
+ * Apps somebody asked for.
+ *
+ * The point of the whole site is a developer finding their own app, and the
+ * charts will never contain it. So anybody can ask, the app is watched from
+ * that moment — rating, version and icon are free and instant — and its
+ * reviews are read as soon as a collector reaches it.
+ *
+ * `who` is a salted one-way hash of the address: enough to stop one person
+ * filling the queue, and never enough to say who they are.
+ */
+export const requests = pgTable("requests", {
+  id: serial("id").primaryKey(),
+  app_id: text("app_id").notNull(),
+  who: text("who").notNull(),
+  at: timestamp("at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index("requests_app_idx").on(t.app_id), index("requests_who_idx").on(t.who, t.at)]);

@@ -33,6 +33,9 @@ export type AppView = { app: App; stores: Store[] };
 
 export type Snapshot = {
   apps: AppView[];
+  /** Apps we have read complaints for, and apps we only watch. */
+  read: number;
+  watched: number;
   quotes: Map<string, Quote>;
   /** Distinct days we hold ratings for. Two is the minimum for a delta. */
   days: string[];
@@ -114,8 +117,12 @@ async function load(): Promise<Snapshot> {
   };
   const lastReviewAt = newest.map((n) => n.newest).filter(Boolean).sort().at(-1) ?? null;
 
+  const readCount = views.filter((v) => v.stores.some((st) => st.clusters.length)).length;
+
   return {
     apps: views,
+    read: readCount,
+    watched: views.length - readCount,
     quotes: new Map(quoteRows.map((q) => [q.review_id, q])),
     days: days.map((d) => d.day),
     totals,

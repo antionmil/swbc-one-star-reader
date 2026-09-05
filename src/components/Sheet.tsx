@@ -28,6 +28,7 @@ export function Sheet({
         <div className="flex flex-wrap gap-x-5 gap-y-1">
           <Link href="/" className="hover:text-loud">the wire</Link>
           <Link href="/today" className="hover:text-loud">what moved</Link>
+          <Link href="/requested" className="hover:text-loud">the queue</Link>
           <Link href="/method" className="hover:text-loud">method &amp; limits</Link>
           <a href="https://onedaybuilt.com" className="hover:text-loud">one website a day</a>
         </div>

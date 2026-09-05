@@ -77,9 +77,10 @@ export default async function AppPage({ params }: { params: Promise<{ slug: stri
               </div>
 
               {st.clusters.length === 0 ? (
-                <p className="mt-3 text-[15px] leading-relaxed text-muted">
-                  Not enough negative reviews here to group anything honestly. There are{" "}
-                  {st.read}, and the threshold is twelve.
+                <p className="mt-3 max-w-[58ch] text-[15px] leading-relaxed text-muted">
+                  {st.total === 0
+                    ? "We have not read this app's reviews yet. Apple rations that feed to about one page per address every ten minutes and refuses datacentre addresses, so the reading is done by hand — the rating above is live, the complaints are not there yet."
+                    : `Not enough negative reviews here to group anything honestly. There are ${st.read}, and the threshold is twelve.`}
                 </p>
               ) : (
                 <div className="mt-4 space-y-6">

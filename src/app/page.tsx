@@ -2,6 +2,7 @@ import Link from "next/link";
 import { appSlug, snapshot } from "@/lib/read";
 import { ago, numericDate } from "@/lib/when";
 import { AppRow } from "@/components/AppRow";
+import { Find } from "@/components/Find";
 import { Sheet } from "@/components/Sheet";
 
 /**
@@ -51,6 +52,14 @@ export default async function Wire() {
         bar is what its negative reviews are made of: the loudest complaint in red, the
         second in amber, the rest in grey.
       </p>
+      <p className="mt-2.5 max-w-[58ch] font-mono text-[12px] leading-relaxed text-faint">
+        {s.read} apps read · {s.watched.toLocaleString("en-GB")} more watched, with live
+        ratings and no complaints read yet · ask for any app in the App Store below.
+      </p>
+
+      <div className="mt-7">
+        <Find />
+      </div>
 
       <div className="mt-8 border-t border-rule">
         {blocks.map(({ app }) => {
