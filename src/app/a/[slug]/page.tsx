@@ -72,8 +72,16 @@ export default async function AppPage({ params }: { params: Promise<{ slug: stri
                       {" · "}
                     </>
                   )}
-                  {st.rating?.version && `version ${st.rating.version} · `}
-                  {st.read} of {st.total} reviews are 1&ndash;2 stars
+                  {st.rating?.version && `version ${st.rating.version}`}
+                  {/* "0 of 0 reviews are 1–2 stars" is not a fact worth
+                      printing. A watched app says nothing here; the sentence
+                      underneath explains why. */}
+                  {st.total > 0 && (
+                    <>
+                      {st.rating?.version ? " · " : ""}
+                      {st.read} of {st.total} reviews are 1&ndash;2 stars
+                    </>
+                  )}
                 </span>
               </div>
 
