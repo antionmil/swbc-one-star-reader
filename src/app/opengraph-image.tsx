@@ -12,9 +12,18 @@ export const alt = "One-star reader — what people actually hate about the apps
  */
 export default async function OG() {
   const s = await snapshot();
+  /* Biggest COUNT, not biggest share. Sorting by share put "Netflix Game
+     Controller — QR code scanning redirects to the App Store, 11 of 300" on
+     the card: a real complaint, and the weakest possible first impression.
+     The count favours the apps a reader recognises, which is what the card is
+     for. */
   const top = s.apps
-    .flatMap((a) => a.stores.flatMap((st) => st.clusters.map((c) => ({ app: a.app.name, store: st.store, c }))))
-    .sort((x, y) => y.c.share - x.c.share)[0];
+    .flatMap((a) =>
+      a.stores.flatMap((st) =>
+        st.clusters.map((c) => ({ app: a.app.name, store: st.store, c, rated: st.rating?.count ?? 0 })),
+      ),
+    )
+    .sort((x, y) => y.c.n - x.c.n || y.rated - x.rated)[0];
 
   return new ImageResponse(
     (
@@ -39,7 +48,7 @@ export default async function OG() {
               {top.c.label}
             </span>
             <span style={{ fontSize: 30, color: "#b3312a", marginTop: 14 }}>
-              {top.c.n} of the {SAMPLE} most recent one-star reviews
+              {top.c.n} of the {SAMPLE} most recent one- and two-star reviews
             </span>
           </div>
         ) : (
