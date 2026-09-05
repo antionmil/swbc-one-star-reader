@@ -65,6 +65,7 @@ export async function fetchPage(appId: string, store: string, page: number): Pro
 
 export type Lookup = {
   name: string;
+  artwork: string | null;
   average: number | null;
   count: number | null;
   version: string | null;
@@ -90,6 +91,7 @@ export async function lookup(appId: string, store: string): Promise<Lookup | nul
     if (!r) return null;
     return {
       name: String(r.trackName ?? ""),
+      artwork: r.artworkUrl100 ? String(r.artworkUrl100) : null,
       average: typeof r.averageUserRating === "number" ? r.averageUserRating : null,
       count: typeof r.userRatingCount === "number" ? r.userRatingCount : null,
       version: r.version ? String(r.version) : null,

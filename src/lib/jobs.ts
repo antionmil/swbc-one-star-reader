@@ -25,6 +25,7 @@ export async function collectRatings() {
   for (const r of rows) {
     const l = await lookup(r.app_id, r.store);
     if (!l) continue;
+    if (l.artwork) await db`update apps set artwork = ${l.artwork} where id = ${r.app_id}`;
     await db`
       insert into ratings (app_id, store, day, average, count, version, released_at)
       values (${r.app_id}, ${r.store}, ${day}, ${l.average}, ${l.count}, ${l.version},

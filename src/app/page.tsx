@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { appSlug, snapshot } from "@/lib/read";
-import { ago, numericDate, storeName } from "@/lib/when";
-import { Complaint } from "@/components/Complaint";
+import { ago, numericDate } from "@/lib/when";
+import { AppRow } from "@/components/AppRow";
 import { Sheet } from "@/components/Sheet";
 
 /**
@@ -47,46 +47,16 @@ export default async function Wire() {
       </h1>
       <p className="mt-3.5 max-w-[58ch] text-[16px] leading-relaxed text-muted">
         {s.totals.negative.toLocaleString("en-GB")} one- and two-star App Store reviews,
-        sorted into the complaints that keep coming back. Every count is the number of
-        reviews in that group, and every quote is a real review.
+        sorted into the complaints that keep coming back. Open an app to read them. The
+        bar is what its negative reviews are made of: the loudest complaint in red, the
+        second in amber, the rest in grey.
       </p>
 
-      <div className="mt-8 space-y-9">
-        {blocks.map(({ app, store, others }) => (
-          <article key={app.id}>
-            <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-              <Link href={`/a/${appSlug(app.name)}`} className="text-[17px] font-bold hover:text-loud">
-                {app.name}
-              </Link>
-              <span className="font-mono text-[11px] text-faint">
-                {storeName(store.store)} · {store.read} of {store.total} reviews are 1&ndash;2 stars
-                {others.length > 0 && ` · also ${others.map((o) => storeName(o.store)).join(", ")}`}
-              </span>
-            </div>
-
-            <div className="mt-3 space-y-3.5">
-              {store.clusters.slice(0, TOP).map((c, i) => (
-                <Complaint
-                  key={c.key}
-                  c={c}
-                  rank={i}
-                  read={Math.min(store.read, 120)}
-                  big={i === 0}
-                  quote={i === 0 ? s.quotes.get(c.quotes[0]) : undefined}
-                />
-              ))}
-            </div>
-
-            {store.clusters.length > TOP && (
-              <p className="mt-2.5 font-mono text-[11px] text-faint">
-                <Link href={`/a/${appSlug(app.name)}`} className="text-link hover:underline">
-                  {store.clusters.length - TOP} more complaint
-                  {store.clusters.length - TOP === 1 ? "" : "s"}, and every storefront &rarr;
-                </Link>
-              </p>
-            )}
-          </article>
-        ))}
+      <div className="mt-8 border-t border-rule">
+        {blocks.map(({ app }) => {
+          const view = s.apps.find((a) => a.app.id === app.id)!;
+          return <AppRow key={app.id} view={view} quotes={s.quotes} />;
+        })}
       </div>
 
       <p className="mt-10 max-w-[58ch] text-[14px] leading-relaxed text-muted">

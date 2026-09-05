@@ -14,6 +14,10 @@ export const apps = pgTable("apps", {
   id: text("id").primaryKey(),              // Apple's numeric app id, as text
   name: text("name").notNull(),
   genre: text("genre"),
+  /** Apple's own icon, 100px. Filled by the daily ratings job, because the
+   *  lookup endpoint answers datacentre addresses and the review feed does
+   *  not. */
+  artwork: text("artwork"),
   added_at: timestamp("added_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

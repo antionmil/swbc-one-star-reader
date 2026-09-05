@@ -15,7 +15,7 @@ export type Cluster = {
 };
 export type Quote = { review_id: string; title: string; body: string; rating: number; written_at: string | null };
 export type Rating = { app_id: string; store: string; day: string; average: number | null; count: number | null; version: string | null; released_at: string | null };
-export type App = { id: string; name: string; genre: string | null };
+export type App = { id: string; name: string; genre: string | null; artwork: string | null };
 
 export type Store = {
   store: string;
@@ -56,7 +56,7 @@ export function snapshot(): Promise<Snapshot> {
 async function load(): Promise<Snapshot> {
   const db = sql();
   const [apps, clusters, counts, ratings, newest, quoteRows, days] = await Promise.all([
-    db`select id, name, genre from apps order by name` as unknown as Promise<App[]>,
+    db`select id, name, genre, artwork from apps order by name` as unknown as Promise<App[]>,
     db`select app_id, store, key, label, blurb, n, share, quotes, first_run, run_id
        from clusters order by n desc` as unknown as Promise<Cluster[]>,
     db`select app_id, store, count(*)::int as total,
