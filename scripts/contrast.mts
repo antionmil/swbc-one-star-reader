@@ -11,9 +11,10 @@ const ratio = (a: string, b: string) => {
   const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
   return (x + 0.05) / (y + 0.05);
 };
+/* One scheme. The site committed to the light page, so there is one palette to
+   measure and no second set of figures to drift. */
 const THEMES = {
   light: { ground: "#ffffff", surface: "#faf9f6", ink: "#16171a", muted: "#55565a", faint: "#6f7075", loud: "#b3312a", warn: "#8a5a09", link: "#1b4fb0", live: "#1f7a44" },
-  dark: { ground: "#111214", surface: "#191a1d", ink: "#eceef2", muted: "#a6a8ae", faint: "#8e9096", loud: "#ff8878", warn: "#e3a94a", link: "#8fb4ff", live: "#6fce9a" },
 };
 let worst = 99;
 for (const [theme, t] of Object.entries(THEMES)) {

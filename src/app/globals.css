@@ -1,6 +1,13 @@
 @import "tailwindcss";
 
-/* ONE palette, one file. Every colour on this site is a token from here.
+/* ONE palette, one file, and one scheme.
+
+   The site is light on purpose rather than following the reader's setting.
+   These are App Store reviews on a page you read like a newspaper, and a
+   design that commits reads better than one that half-supports two — one set
+   of contrast figures, and no second palette to fall out of date.
+
+   Every colour on this site is a token from here.
    Day 1 of this run shipped eighteen hardcoded white values on a light
    background — invisible to every visitor. Day 2 measured three tokens against
    the PAGE and used them on a CARD, and all three failed AA where they were
@@ -20,41 +27,17 @@
   --color-loud: #b3312a;     /*  6.20 on ground ·  5.88 on surface — the biggest complaint */
   --color-warn: #8a5a09;     /*  5.92 on ground ·  5.62 on surface — the second */
   --color-link: #1b4fb0;     /*  7.52 on ground ·  7.14 on surface */
-  --color-live: #1f7a44;     /*  5.55 on ground ·  5.28 on surface — the live dot */
+  --color-live: #1f7a44;     /*  5.35 on ground ·  5.08 on surface — the live dot */
 
   --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --color-ground: #111214;
-    --color-surface: #191a1d;
-    --color-ink: #eceef2;    /* 16.13 on ground · 14.98 on surface */
-    --color-muted: #a6a8ae;  /*  7.88 on ground ·  7.32 on surface */
-    --color-faint: #8e9096;  /*  5.87 on ground ·  5.45 on surface */
-    --color-rule: #2a2c31;
-    --color-rule-soft: #212328;
-    --color-loud: #ff8878;   /*  8.07 on ground ·  7.49 on surface */
-    --color-warn: #e3a94a;   /*  8.96 on ground ·  8.32 on surface */
-    --color-link: #8fb4ff;   /*  9.05 on ground ·  8.40 on surface */
-    --color-live: #6fce9a;   /*  9.79 on ground ·  9.09 on surface */
-  }
-}
-:root[data-theme="dark"] {
-  --color-ground: #111214;
-  --color-surface: #191a1d;
-  --color-ink: #eceef2;
-  --color-muted: #a6a8ae;
-  --color-faint: #8e9096;
-  --color-rule: #2a2c31;
-  --color-rule-soft: #212328;
-  --color-loud: #ff8878;
-  --color-warn: #e3a94a;
-  --color-link: #8fb4ff;
-  --color-live: #6fce9a;
-}
+/* Tells the browser to paint its own furniture light as well — scrollbars,
+   form controls, and the flash before the first paint. Without it the page is
+   white and the scrollbar is black. */
+:root { color-scheme: light; }
 
 html, body { background: var(--color-ground); color: var(--color-ink); }
 body { font-family: var(--font-body); }
