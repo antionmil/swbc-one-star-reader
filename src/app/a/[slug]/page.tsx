@@ -79,7 +79,7 @@ export default async function AppPage({ params }: { params: Promise<{ slug: stri
                   {st.total > 0 && (
                     <>
                       {st.rating?.version ? " · " : ""}
-                      {st.read} of {st.total} reviews are 1&ndash;2 stars
+                      {st.read} of the {st.total} written reviews are one or two stars
                     </>
                   )}
                 </span>

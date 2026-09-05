@@ -13,11 +13,15 @@ import { Severity } from "@/components/Severity";
  * page the moment it paints — which matters on a list of twenty where a
  * reader opens one or two.
  */
+/** 18,534,843 -> "18.5M". Ratings counts are the one place on this site where
+ *  the exact figure helps nobody. */
+const compact = (n: number) =>
+  n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1_000 ? `${Math.round(n / 1000)}k` : String(n);
+
 export function AppRow({ view, quotes }: { view: AppView; quotes: Map<string, Quote> }) {
   const store = view.stores[0];
   if (!store) return null;
   const read = Math.min(store.read, SAMPLE);
-  const negShare = store.total ? Math.round((store.read / store.total) * 100) : 0;
   /* What the complaints add up to. "10 complaints" says nothing about size —
      you open the row and the first one alone is 40 of 284. This is the number
      the bar already draws, written down. */
@@ -46,8 +50,17 @@ export function AppRow({ view, quotes }: { view: AppView; quotes: Map<string, Qu
         <span className="min-w-0 flex-1">
           <span className="flex flex-wrap items-baseline gap-x-2">
             <span className="text-[16px] font-bold">{view.app.name}</span>
+            {/* Apple's own score, not our share of bad reviews. The row used to
+                say "57% of reviews are 1–2 stars", which is true of the few
+                hundred WRITTEN reviews Apple hands out and reads as if 57% of
+                eighteen million ratings were bad. The honest headline number
+                for an app is the one the App Store shows. */}
             <span className="tnum font-mono text-[11px] text-faint">
-              {negShare}% of reviews are 1&ndash;2 stars
+              {store.rating?.average != null
+                ? `${store.rating.average.toFixed(2)}★${
+                    store.rating.count != null ? ` from ${compact(store.rating.count)}` : ""
+                  }`
+                : "no rating"}
             </span>
           </span>
           <span className="mt-1.5 flex items-center gap-3">
@@ -69,8 +82,9 @@ export function AppRow({ view, quotes }: { view: AppView; quotes: Map<string, Qu
       </summary>
 
       <div className="pb-5 pl-[52px]">
-        <p className="font-mono text-[11px] text-faint">
-          {storeName(store.store)} · {store.read} of {store.total} reviews are 1&ndash;2 stars
+        <p className="font-mono text-[11px] leading-relaxed text-faint">
+          {storeName(store.store)} · {store.read} of the {store.total} written reviews
+          Apple gave us are one or two stars
           {view.stores.length > 1 &&
             ` · also ${view.stores.slice(1).map((o) => storeName(o.store)).join(", ")}`}
         </p>

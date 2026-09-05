@@ -41,6 +41,30 @@ export default async function Method() {
         </p>
       </Block>
 
+      <Block title="Why the score is 4.6 and the reviews look furious">
+        <p>
+          They count different things. Apple&rsquo;s score averages{" "}
+          <strong className="font-semibold">every rating</strong> — 18.5 million of them
+          for WhatsApp in the United States — and almost all of those are a silent tap on
+          a star with nothing written.
+        </p>
+        <p>
+          The public feed only hands out <strong className="font-semibold">written
+          reviews</strong>, a few hundred of the most recent. People who bother to type
+          are angrier than people who tap. Across everything read here the average written
+          review is <strong className="font-semibold">3.42 stars</strong> while
+          Apple&rsquo;s own score for the same apps averages{" "}
+          <strong className="font-semibold">4.68</strong>. The written reviews are
+          U-shaped: 5,256 of one star against 8,829 of five, and very little in between.
+        </p>
+        <p>
+          So a figure here that says two thirds of the written reviews are bad is not
+          saying two thirds of users are unhappy, and this site does not put it that way.
+          Every row shows Apple&rsquo;s own score first, and the counts underneath always
+          name what they are counted out of.
+        </p>
+      </Block>
+
       <Block title="Apple throttles the feed, and lies about it">
         <p>
           Measured on 5 September 2026: after twelve minutes of silence one page came back
