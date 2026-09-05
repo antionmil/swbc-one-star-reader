@@ -46,15 +46,12 @@ export default async function Wire() {
       <h1 className="mt-8 max-w-[19ch] text-[30px] leading-[1.08] font-bold tracking-[-0.02em] sm:text-[38px]">
         What people actually hate about the apps they use every day.
       </h1>
-      <p className="mt-3.5 max-w-[58ch] text-[16px] leading-relaxed text-muted">
+      <p className="mt-3.5 max-w-[54ch] text-[16px] leading-relaxed text-muted">
         {s.totals.negative.toLocaleString("en-GB")} one- and two-star App Store reviews,
-        sorted into the complaints that keep coming back. Open an app to read them. The
-        bar is what its negative reviews are made of: the loudest complaint in red, the
-        second in amber, the rest in grey.
+        grouped into the complaints that keep coming back. Open an app to read them.
       </p>
-      <p className="mt-2.5 max-w-[58ch] font-mono text-[12px] leading-relaxed text-faint">
-        {s.read} apps read · {s.watched.toLocaleString("en-GB")} more watched, with live
-        ratings and no complaints read yet · ask for any app in the App Store below.
+      <p className="mt-2 max-w-[58ch] font-mono text-[12px] leading-relaxed text-faint">
+        {s.read} apps read · {s.watched.toLocaleString("en-GB")} watched · ask for yours below
       </p>
 
       <div className="mt-7">

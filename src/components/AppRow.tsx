@@ -18,6 +18,10 @@ export function AppRow({ view, quotes }: { view: AppView; quotes: Map<string, Qu
   if (!store) return null;
   const read = Math.min(store.read, SAMPLE);
   const negShare = store.total ? Math.round((store.read / store.total) * 100) : 0;
+  /* What the complaints add up to. "10 complaints" says nothing about size —
+     you open the row and the first one alone is 40 of 284. This is the number
+     the bar already draws, written down. */
+  const filed = store.clusters.reduce((a, c) => a + c.n, 0);
 
   return (
     <details className="group border-b border-rule-soft">
@@ -49,7 +53,9 @@ export function AppRow({ view, quotes }: { view: AppView; quotes: Map<string, Qu
           <span className="mt-1.5 flex items-center gap-3">
             <Severity clusters={store.clusters} read={read} />
             <span className="tnum shrink-0 font-mono text-[11px] text-faint">
-              {store.clusters.length || "no"} complaint{store.clusters.length === 1 ? "" : "s"}
+              {store.clusters.length
+                ? `${store.clusters.length} complaints · ${filed} of ${read}`
+                : "not read yet"}
             </span>
           </span>
         </span>
