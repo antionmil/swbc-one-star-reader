@@ -94,7 +94,14 @@ export async function reclusterStale(limit = 8) {
         (select max(c.at) from clusters c where c.app_id = r.app_id and c.store = r.store),
         '1970-01-01')
     group by r.app_id, a.name, r.store
+    /* Both halves matter. Three new reviews is enough to be worth re-reading;
+       twelve negatives in total is the threshold clusterOne needs to say
+       anything at all. Without the second, a pair with ten reviews is picked
+       as stale every single morning, does nothing, and crowds out a pair that
+       could have been re-read. */
     having count(*) >= 3
+       and (select count(*) from reviews x
+            where x.app_id = r.app_id and x.store = r.store and x.rating <= 2) >= 12
     order by count(*) desc
     limit ${limit}`) as unknown as { app_id: string; name: string; store: string; fresh: number }[];
   if (!stale.length) return { pairs: 0, clusters: 0 };
