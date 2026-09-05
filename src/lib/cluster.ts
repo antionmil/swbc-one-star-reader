@@ -25,9 +25,15 @@ export type ClusterOut = {
 export const MODEL = "claude-haiku-4-5";
 
 /** How many negative reviews go into one clustering call. Every page states
- *  this number, because "the three complaints" means nothing without "out of
- *  how many". */
-export const SAMPLE = 120;
+ *  this number, because "four complaints" means nothing without "out of how
+ *  many reviews".
+ *
+ *  It was 120, and four complaints for an app with a hundred million users
+ *  read as absurd — not because the grouping was wrong, but because 120
+ *  reviews cannot contain more than a handful of recurring themes. The apps
+ *  here hold between 230 and 330 negative reviews each, so this now reads
+ *  nearly all of them. */
+export const SAMPLE = 300;
 
 export function systemPrompt() {
   return [
@@ -40,7 +46,7 @@ export function systemPrompt() {
     "4. `label` is a plain noun phrase of at most eight words, in English, describing what breaks or annoys. Not a category name. 'Account banned with no explanation', not 'Account issues'.",
     "5. `blurb` is one sentence of at most twenty-five words saying what the reviews say, in the reviewers' own terms.",
     "6. `key` is a lowercase slug of two or three words, stable and reusable: the same complaint next week must produce the same key. 'account-bans', 'share-sheet-preview'.",
-    "7. Return between two and five groups, largest first.",
+    "7. Return between four and ten groups, largest first. Split a broad group into the distinct things people are actually describing rather than merging them: \"crashes on opening\" and \"crashes when sending a photo\" are two complaints, not one.",
     "8. Reviews may be in any language. Write the label and blurb in English whatever the reviews are in.",
     "",
     'Answer with JSON only, no prose and no code fence: {"clusters":[{"key":"...","label":"...","blurb":"...","members":[1,2,3]}]}',

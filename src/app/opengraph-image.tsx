@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { SAMPLE } from "@/lib/cluster";
 import { snapshot } from "@/lib/read";
 
 export const size = { width: 1200, height: 630 };
@@ -38,7 +39,7 @@ export default async function OG() {
               {top.c.label}
             </span>
             <span style={{ fontSize: 30, color: "#b3312a", marginTop: 14 }}>
-              {top.c.n} of the 120 most recent one-star reviews
+              {top.c.n} of the {SAMPLE} most recent one-star reviews
             </span>
           </div>
         ) : (

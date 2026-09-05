@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { SAMPLE } from "@/lib/cluster";
 import { appSlug, snapshot } from "@/lib/read";
 import { ago, numericDate, storeName } from "@/lib/when";
 import { Complaint } from "@/components/Complaint";
@@ -47,7 +48,7 @@ export default async function AppPage({ params }: { params: Promise<{ slug: stri
 
       <div className="mt-8 space-y-10">
         {view.stores.map((st) => {
-          const read = Math.min(st.read, 120);
+          const read = Math.min(st.read, SAMPLE);
           const delta =
             st.rating?.average != null && st.prev?.average != null
               ? st.rating.average - st.prev.average

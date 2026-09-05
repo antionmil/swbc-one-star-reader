@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SAMPLE } from "@/lib/cluster";
 import type { AppView, Quote } from "@/lib/read";
 import { appSlug } from "@/lib/read";
 import { storeName } from "@/lib/when";
@@ -15,7 +16,7 @@ import { Severity } from "@/components/Severity";
 export function AppRow({ view, quotes }: { view: AppView; quotes: Map<string, Quote> }) {
   const store = view.stores[0];
   if (!store) return null;
-  const read = Math.min(store.read, 120);
+  const read = Math.min(store.read, SAMPLE);
   const negShare = store.total ? Math.round((store.read / store.total) * 100) : 0;
 
   return (
