@@ -1,5 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
+import { fetchPage } from "@/lib/apple";
 import { collectRatings, reclusterStale } from "@/lib/jobs";
 
 export const runtime = "nodejs";
@@ -22,6 +23,19 @@ const JOBS: Record<string, () => Promise<unknown>> = {
        the old number for an hour. */
     revalidatePath("/", "layout");
     return { ratings, clusters };
+  },
+  /* Does Apple serve THIS address? GitHub's runners get nothing and two other
+     cloud networks get nothing, but each network has to be measured rather
+     than assumed — the answer decides whether a reader can ask for an app and
+     get it read. */
+  probe: async () => {
+    const out: Record<string, number | null> = {};
+    for (const [app, store] of [["310633997", "us"], ["835599320", "us"], ["310633997", "de"]] as const) {
+      const page = await fetchPage(app, store, 1);
+      out[`${app}/${store}`] = page ? page.length : null;
+      await new Promise((r) => setTimeout(r, 3000));
+    }
+    return out;
   },
   refresh: async () => {
     revalidatePath("/", "layout");
