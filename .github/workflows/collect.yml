@@ -17,15 +17,21 @@ concurrency:
 jobs:
   collect:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
-    # Four runners, four addresses, four slices of the queue. Apple answered 40
-    # of 60 attempts from one runner, so the ceiling was never the throttle —
-    # it was that GitHub fired this ten times in a day rather than the
-    # forty-eight the schedule asks for. More pages per firing is the lever.
+    timeout-minutes: 20
+    # Eight runners, eight addresses, eight slices of the queue.
+    #
+    # The schedule asks for a firing every fifteen minutes and GitHub delivers
+    # one every two or three hours — nine scheduled runs in the last twenty-four
+    # of them. That is the ceiling on this whole site, not Apple: a fresh runner
+    # answered 58 of 62 pages at nine-second gaps, which is nothing like the one
+    # page per ten minutes a warm address gets.
+    #
+    # So the lever is the size of a firing, not its frequency. Even shards widen
+    # the watchlist, odd shards refresh what is published; see scripts/collect.mts.
     strategy:
       fail-fast: false
       matrix:
-        shard: [0, 1, 2, 3]
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -36,7 +42,7 @@ jobs:
       - run: pnpm tsx --conditions=react-server scripts/collect.mts
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          COLLECT_PAIRS: "14"
+          COLLECT_PAIRS: "30"
           COLLECT_GAP_MS: "9000"
           COLLECT_SHARD: ${{ matrix.shard }}
-          COLLECT_SHARDS: "4"
+          COLLECT_SHARDS: "8"
