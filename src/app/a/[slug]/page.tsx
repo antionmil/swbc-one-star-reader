@@ -63,7 +63,11 @@ export default async function AppPage({ params }: { params: Promise<{ slug: stri
                     <>
                       {st.rating.average.toFixed(2)}★
                       {st.rating.count != null && ` from ${st.rating.count.toLocaleString("en-GB")} ratings`}
-                      {delta !== null && delta !== 0 && (
+                      {/* A rating that moved by a ten-thousandth is a rating that
+                          did not move, and "− 0.00 since yesterday" is a
+                          sentence that makes a reader doubt every other number
+                          on the page. */}
+                      {delta !== null && Math.abs(delta) >= 0.005 && (
                         <span className={delta < 0 ? "text-loud" : "text-ink"}>
                           {" "}
                           {delta > 0 ? "+" : "−"}
