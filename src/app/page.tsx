@@ -2,6 +2,8 @@ import Link from "next/link";
 import { appSlug, snapshot } from "@/lib/read";
 import { ago, numericDate } from "@/lib/when";
 import { AppRow } from "@/components/AppRow";
+import { AppShelf } from "@/components/AppShelf";
+import { Hero, type HeroApp } from "@/components/Hero";
 import { Find } from "@/components/Find";
 import { Sheet } from "@/components/Sheet";
 
@@ -41,6 +43,24 @@ export default async function Wire() {
       rated: number;
     }[];
 
+  const hero: HeroApp[] = blocks.map(({ app, store }) => {
+    const top = store.clusters[0];
+    return {
+      id: app.id,
+      name: app.name,
+      slug: appSlug(app.name),
+      artwork: s.apps.find((a) => a.app.id === app.id)?.app.artwork ?? null,
+      score: store.rating?.average ?? null,
+      ratings: store.rating?.count ?? null,
+      complaints: store.clusters.length,
+      filed: store.clusters.reduce((a, c) => a + c.n, 0),
+      read: Math.min(store.read, 300),
+      topLabel: top?.label ?? null,
+      topN: top?.n ?? 0,
+      store: store.store,
+    };
+  });
+
   return (
     <Sheet home right={`${s.totals.apps} apps · ${s.totals.negative.toLocaleString("en-GB")} bad reviews read`}>
       <h1 className="mt-8 max-w-[19ch] text-[30px] leading-[1.08] font-bold tracking-[-0.02em] sm:text-[38px]">
@@ -54,16 +74,18 @@ export default async function Wire() {
         {s.read} apps read · {s.watched.toLocaleString("en-GB")} watched · ask for yours below
       </p>
 
-      <div className="mt-7">
+      <Hero apps={hero} />
+
+      <div className="mt-8">
         <Find />
       </div>
 
-      <div className="mt-8 border-t border-rule">
+      <AppShelf>
         {blocks.map(({ app }) => {
           const view = s.apps.find((a) => a.app.id === app.id)!;
           return <AppRow key={app.id} view={view} quotes={s.quotes} />;
         })}
-      </div>
+      </AppShelf>
 
       <p className="mt-10 max-w-[58ch] text-[14px] leading-relaxed text-muted">
         Apps are ordered by how many people have rated them, which is a choice about

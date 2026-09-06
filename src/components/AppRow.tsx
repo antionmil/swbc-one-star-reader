@@ -28,7 +28,14 @@ export function AppRow({ view, quotes }: { view: AppView; quotes: Map<string, Qu
   const filed = store.clusters.reduce((a, c) => a + c.n, 0);
 
   return (
-    <details className="group border-b border-rule-soft">
+    <details
+      className="group border-b border-rule-soft"
+      /* The shelf reorders these by setting `order` on the flex children, so
+         the numbers it sorts by ride along on the element itself. */
+      data-rated={store.rating?.count ?? 0}
+      data-score={Math.round((store.rating?.average ?? 5) * 100)}
+      data-complaints={store.clusters.length}
+    >
       <summary className="flex cursor-pointer list-none items-center gap-3 py-3 hover:bg-surface [&::-webkit-details-marker]:hidden">
         {view.app.artwork ? (
           /* Apple's own icon, straight from their CDN. Not run through the
