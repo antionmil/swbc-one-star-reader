@@ -8,7 +8,12 @@
 import { sql } from "../src/lib/db";
 import { MODEL, SAMPLE, parseClusters, systemPrompt, userPrompt } from "../src/lib/cluster";
 
-process.loadEnvFile(".env.local");
+/* A GitHub runner has no .env.local; it gets the secrets from the environment.
+   Demanding the file made every sharded run exit 1 before it asked Apple
+   anything. */
+if (!process.env.DATABASE_URL) {
+  try { process.loadEnvFile(".env.local"); } catch { /* CI passes it in */ }
+}
 const KEY = process.env.ANTHROPIC_API_KEY!;
 const API = "https://api.anthropic.com/v1";
 const H = { "x-api-key": KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" };
