@@ -7,7 +7,7 @@ name: collect reviews
 # nothing here assumes a firing happened on time.
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "*/15 * * * *"
   workflow_dispatch:
 
 concurrency:
@@ -17,7 +17,15 @@ concurrency:
 jobs:
   collect:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
+    # Four runners, four addresses, four slices of the queue. Apple answered 40
+    # of 60 attempts from one runner, so the ceiling was never the throttle —
+    # it was that GitHub fired this ten times in a day rather than the
+    # forty-eight the schedule asks for. More pages per firing is the lever.
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -28,5 +36,7 @@ jobs:
       - run: pnpm tsx --conditions=react-server scripts/collect.mts
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          COLLECT_PAIRS: "6"
-          COLLECT_GAP_MS: "20000"
+          COLLECT_PAIRS: "14"
+          COLLECT_GAP_MS: "9000"
+          COLLECT_SHARD: ${{ matrix.shard }}
+          COLLECT_SHARDS: "4"

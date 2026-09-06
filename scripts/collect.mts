@@ -19,6 +19,11 @@ if (!process.env.DATABASE_URL) {
 
 const PAIRS = Number(process.env.COLLECT_PAIRS ?? 6);
 const GAP_MS = Number(process.env.COLLECT_GAP_MS ?? 20_000);
+/* Which slice of the queue this runner takes. The workflow starts several jobs
+   at once, each on its own runner and so its own address, and each takes a
+   different slice — otherwise four runners would race for the same six pages. */
+const SHARD = Number(process.env.COLLECT_SHARD ?? 0);
+const SHARDS = Number(process.env.COLLECT_SHARDS ?? 1);
 const db = sql();
 
 const [{ id: runId }] = (await db`insert into runs default values returning id`) as unknown as { id: number }[];
@@ -36,10 +41,13 @@ const targets = (await db`
   cross join (values ('us'), ('de'), ('gb'), ('fr')) as s(store)
   order by coalesce((select max(f.at) from fetches f
     where f.app_id = a.id and f.store = s.store), '1970-01-01') asc
-  limit ${PAIRS}`) as unknown as Row[];
+  limit ${PAIRS * SHARDS}`) as unknown as Row[];
+
+/* Every SHARDS-th row, offset by this runner's index. */
+const mine = targets.filter((_, i) => i % SHARDS === SHARD);
 
 let tried = 0, answered = 0, fresh = 0;
-for (const t of targets) {
+for (const t of mine) {
   if (tried) await new Promise((r) => setTimeout(r, GAP_MS));
   tried++;
   const page = await fetchPage(t.app_id, t.store, 1);
@@ -75,4 +83,4 @@ for (const t of targets) {
 await db`
   update runs set finished_at = now(), pages_tried = ${tried},
     pages_answered = ${answered}, new_reviews = ${fresh} where id = ${runId}`;
-console.log(`run ${runId}: ${answered}/${tried} pages answered, ${fresh} new reviews`);
+console.log(`run ${runId} (shard ${SHARD + 1}/${SHARDS}): ${answered}/${tried} pages answered, ${fresh} new reviews`);
