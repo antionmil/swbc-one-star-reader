@@ -24,12 +24,18 @@ const db = sql();
 const [{ id: runId }] = (await db`insert into runs default values returning id`) as unknown as { id: number }[];
 
 type Row = { app_id: string; name: string; store: string };
+/* The apps we actually read, in every storefront we track — not just the
+   storefronts that already have reviews. Britain and France start empty and
+   fill from here; without this they would never be fetched at all, because the
+   list used to be built from the reviews table itself.
+   Least recently tried first, so the rotation is even rather than alphabetical. */
 const targets = (await db`
-  select r.app_id, a.name, r.store
-  from (select distinct app_id, store from reviews) r
+  select a.id as app_id, a.name, s.store
+  from (select distinct app_id from reviews) r
   join apps a on a.id = r.app_id
+  cross join (values ('us'), ('de'), ('gb'), ('fr')) as s(store)
   order by coalesce((select max(f.at) from fetches f
-    where f.app_id = r.app_id and f.store = r.store), '1970-01-01') asc
+    where f.app_id = a.id and f.store = s.store), '1970-01-01') asc
   limit ${PAIRS}`) as unknown as Row[];
 
 let tried = 0, answered = 0, fresh = 0;

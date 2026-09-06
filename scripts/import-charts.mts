@@ -13,7 +13,7 @@ import { sql } from "../src/lib/db";
 
 process.loadEnvFile(".env.local");
 const db = sql();
-const STORES = ["us", "de"] as const;
+const STORES = ["us", "de", "gb", "fr"] as const;
 const CHARTS = ["topfreeapplications", "toppaidapplications", "topgrossingapplications"] as const;
 
 const found = new Map<string, { name: string; genre: string | null }>();

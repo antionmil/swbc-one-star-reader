@@ -24,11 +24,11 @@ export async function collectRatings() {
      read and a watched app has no reviews. */
   const rows = (await db`
     select a.id as app_id, s.store
-    from apps a cross join (values ('us'), ('de')) as s(store)
+    from apps a cross join (values ('us'), ('de'), ('gb'), ('fr')) as s(store)
     order by a.id, s.store`) as unknown as { app_id: string; store: string }[];
   const day = new Date().toISOString().slice(0, 10);
-  /* Eight at a time. 882 lookups one after another is four minutes, and the
-     function ceiling is five. */
+  /* Eight at a time. 1,764 lookups one after another is minutes, and the
+     function ceiling is five of them. */
   let ok = 0;
   let i = 0;
   const workers = Array.from({ length: 8 }, async () => {

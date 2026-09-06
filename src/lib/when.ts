@@ -21,6 +21,11 @@ export function ago(d: Date | string | null | undefined): string {
   return `${days} days ago`;
 }
 
+/** The storefronts this site tracks, in the order pages show them.
+ *  Ratings exist for all four; reviews only where the feed has let us collect
+ *  them, which is why a page can show a score and no complaints. */
+export const STORES = ["us", "de", "gb", "fr"] as const;
+
 export const STORE_NAMES: Record<string, string> = {
   us: "United States", de: "Germany", gb: "Britain", fr: "France",
 };

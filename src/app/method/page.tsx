@@ -33,11 +33,16 @@ export default async function Method() {
           count, nothing more.
         </p>
         <p>
-          The corpus here is {s.totals.reviews.toLocaleString("en-GB")} reviews across{" "}
-          {s.totals.apps} apps and two storefronts,{" "}
-          {s.totals.negative.toLocaleString("en-GB")} of them one or two stars. The
-          watchlist is the top free apps of the American chart, fixed on 31 August so that
-          &ldquo;what moved&rdquo; compares like with like.
+          The corpus here is {s.totals.reviews.toLocaleString("en-GB")} reviews,{" "}
+          {s.totals.negative.toLocaleString("en-GB")} of them one or two stars, collected
+          from the American and German storefronts before Apple tightened the feed.
+        </p>
+        <p>
+          <strong className="font-semibold">Scores are read in four storefronts</strong> —
+          the United States, Germany, Britain and France — because the ratings endpoint is
+          not rationed. Complaints exist only where written reviews have been collected, so
+          an app can show four scores and two sets of complaints. Britain and France are
+          filling from 6 September; every storefront says how much it has read.
         </p>
       </Block>
 

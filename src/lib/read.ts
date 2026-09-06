@@ -93,9 +93,11 @@ async function load(): Promise<Snapshot> {
       .filter((c) => c.app_id === app.id)
       .sort((x, y) => y.read - x.read || x.store.localeCompare(y.store))
       .map((c) => c.store);
-    const stores = withReviews.length
-      ? withReviews
-      : [...new Set(ratings.filter((r) => r.app_id === app.id).map((r) => r.store))];
+    const rated = [...new Set(ratings.filter((r) => r.app_id === app.id).map((r) => r.store))];
+    /* Every storefront we hold a score for, with the ones we have actually read
+       first. A read app now shows four scores side by side and says plainly
+       which of them have complaints behind them. */
+    const stores = [...withReviews, ...rated.filter((s) => !withReviews.includes(s))];
     return {
       app,
       stores: stores.map((store) => {
