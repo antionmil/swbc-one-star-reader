@@ -89,9 +89,21 @@ export function parseClusters(text: string): ClusterOut[] {
   if (start < 0 || end < 0) return [];
   try {
     const parsed = JSON.parse(cleaned.slice(start, end + 1)) as { clusters?: ClusterOut[] };
-    return (parsed.clusters ?? []).filter(
-      (c) => c && typeof c.key === "string" && Array.isArray(c.members) && c.members.length >= 3,
-    );
+    /* Every field the caller writes to the database is guaranteed here, not
+       hoped for. A run of 21 pairs came back with one group that had a key, a
+       label and members but no blurb, and `blurb.slice()` took the whole batch
+       down after it had been paid for. A group is only dropped for the two
+       things that cannot be invented: an identity and enough members. */
+    return (parsed.clusters ?? [])
+      .filter((c) => c && typeof c.key === "string" && Array.isArray(c.members) && c.members.length >= 3)
+      .map((c) => ({
+        ...c,
+        key: String(c.key).slice(0, 60),
+        label: typeof c.label === "string" && c.label.trim() ? c.label : String(c.key).replace(/-/g, " "),
+        blurb: typeof c.blurb === "string" ? c.blurb : "",
+        members: c.members.filter((m) => Number.isInteger(m)),
+      }))
+      .filter((c) => c.members.length >= 3);
   } catch {
     return [];
   }
