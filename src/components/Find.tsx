@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { artwork } from "@/lib/artwork";
 
 type Hit = {
   id: string;
@@ -99,7 +100,7 @@ export function Find() {
             <div key={h.id} className="flex items-center gap-3 py-2.5">
               {h.artwork ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={h.artwork} alt="" width={32} height={32} className="h-8 w-8 shrink-0 rounded-[7px] border border-rule" />
+                <img src={artwork(h.artwork, 96)!} alt="" width={32} height={32} className="h-8 w-8 shrink-0 rounded-[7px] border border-rule" />
               ) : (
                 <span aria-hidden className="h-8 w-8 shrink-0 rounded-[7px] border border-rule bg-surface" />
               )}

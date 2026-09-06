@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SAMPLE } from "@/lib/cluster";
+import { artwork } from "@/lib/artwork";
 import type { AppView, Quote } from "@/lib/read";
 import { appSlug } from "@/lib/read";
 import { storeName } from "@/lib/when";
@@ -43,7 +44,7 @@ export function AppRow({ view, quotes }: { view: AppView; quotes: Map<string, Qu
              optimising twenty icons is a bill for no benefit. */
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={view.app.artwork}
+            src={artwork(view.app.artwork, 128)!}
             alt=""
             width={40}
             height={40}

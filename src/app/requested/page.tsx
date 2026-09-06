@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { sql } from "@/lib/db";
 import { appSlug } from "@/lib/read";
+import { artwork } from "@/lib/artwork";
 import { ago } from "@/lib/when";
 import { Sheet } from "@/components/Sheet";
 
@@ -78,7 +79,7 @@ function Section({ title, rows }: { title: string; rows: Row[] }) {
           <div key={r.id} className="flex items-center gap-3 py-2.5">
             {r.artwork ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={r.artwork} alt="" width={32} height={32} className="h-8 w-8 shrink-0 rounded-[7px] border border-rule" />
+              <img src={artwork(r.artwork, 96)!} alt="" width={32} height={32} className="h-8 w-8 shrink-0 rounded-[7px] border border-rule" />
             ) : (
               <span aria-hidden className="h-8 w-8 shrink-0 rounded-[7px] border border-rule bg-surface" />
             )}

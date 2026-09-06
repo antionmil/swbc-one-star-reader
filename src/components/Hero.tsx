@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Coverflow, type Cover } from "@/components/Coverflow";
+import { artwork } from "@/lib/artwork";
 
 export type HeroApp = {
   id: string;
@@ -31,7 +32,7 @@ const compact = (n: number) =>
 export function Hero({ apps }: { apps: HeroApp[] }) {
   const [i, setI] = useState(0);
   const app = apps[Math.min(i, apps.length - 1)];
-  const covers: Cover[] = apps.map((a) => ({ id: a.id, src: a.artwork, alt: a.name }));
+  const covers: Cover[] = apps.map((a) => ({ id: a.id, src: artwork(a.artwork, 384), alt: a.name }));
 
   return (
     <div className="mt-4" style={{ ["--cover" as string]: "clamp(96px, 26vw, 150px)" }}>
