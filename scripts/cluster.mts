@@ -14,12 +14,36 @@ import { MODEL, SAMPLE, parseClusters, systemPrompt, userPrompt } from "../src/l
 if (!process.env.DATABASE_URL) {
   try { process.loadEnvFile(".env.local"); } catch { /* CI passes it in */ }
 }
-const KEY = process.env.ANTHROPIC_API_KEY!;
+const KEY = process.env.ANTHROPIC_API_KEY;
+if (!KEY) {
+  /* Not an error. This is the only job on the site that needs a paid key, and
+     the hourly schedule should say "nothing to do" rather than paint a red
+     cross every hour on a repository where the secret has not been added. */
+  console.log("no ANTHROPIC_API_KEY — nothing grouped. Add it as a repository secret to enable this job.");
+  process.exit(0);
+}
 const API = "https://api.anthropic.com/v1";
 const H = { "x-api-key": KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" };
 
 const db = sql();
 const onlyStale = process.argv.includes("--stale");
+/**
+ * How many app/storefront pairs one run is allowed to read.
+ *
+ * This is a money dial, and it is the only one on the site. A pair costs about
+ * $0.004 to group at Batch API rates — measured, not guessed: 21 pairs cost
+ * $0.07 and 35 cost $0.15. The collector opens roughly 700 new pairs a day, so
+ * grouping everything the moment it becomes readable would be about $2.80 a
+ * day.
+ *
+ * The hourly job runs with LIMIT=8, which is 192 pairs a day and about $0.77.
+ * Raise it in .github/workflows/cluster.yml and the shelf fills faster for
+ * proportionally more money; there is no other effect.
+ *
+ * A pair that has never been published goes first, biggest app first, so what
+ * money there is buys names a reader recognises before it buys the long tail.
+ */
+const LIMIT = Number(process.env.CLUSTER_LIMIT ?? 0) || Infinity;
 
 type Pair = { app_id: string; name: string; store: string; n: number };
 const pairs = (await db`
@@ -28,10 +52,19 @@ const pairs = (await db`
   where r.rating <= 2
   group by r.app_id, a.name, r.store
   having count(*) >= 12
-  order by a.name, r.store`) as unknown as Pair[];
+  order by
+    exists (select 1 from clusters c
+            where c.app_id = r.app_id and c.store = r.store) asc,
+    coalesce((select max(t.count) from ratings t
+              where t.app_id = r.app_id and t.store = r.store), 0) desc,
+    a.name, r.store`) as unknown as Pair[];
 
 const todo: Pair[] = [];
 for (const p of pairs) {
+  /* Stop as soon as the run is full. The staleness check below is one query
+     per pair, and walking hundreds of them to then throw all but eight away is
+     hundreds of round trips for nothing. */
+  if (todo.length >= LIMIT) break;
   if (!onlyStale) { todo.push(p); continue; }
   const [row] = (await db`
     select count(*)::int as n from reviews r
@@ -40,14 +73,17 @@ for (const p of pairs) {
         where c.app_id = r.app_id and c.store = r.store), '1970-01-01')`) as unknown as { n: number }[];
   if (row.n > 0) todo.push(p);
 }
-console.log(`${todo.length} app/storefront pairs to cluster (of ${pairs.length})`);
-if (!todo.length) process.exit(0);
+const capped = todo.slice(0, LIMIT === Infinity ? todo.length : LIMIT);
+console.log(`${capped.length} app/storefront pairs to cluster` +
+  (capped.length < todo.length ? ` (${todo.length} waiting, capped at ${LIMIT})` : "") +
+  ` of ${pairs.length} readable`);
+if (!capped.length) process.exit(0);
 
 /* Build one request per pair. The review index in the prompt maps back to a
    real review id here, so a quote can never be something the model wrote. */
 const index = new Map<string, { review_id: string; title: string; body: string; rating: number }[]>();
 const requests = [];
-for (const p of todo) {
+for (const p of capped) {
   const rows = (await db`
     select review_id, title, body, rating from reviews
     where app_id = ${p.app_id} and store = ${p.store} and rating <= 2
@@ -83,7 +119,7 @@ console.log();
 if (status.processing_status !== "ended") { console.error("batch did not finish in an hour"); process.exit(1); }
 
 const [{ id: runId }] = (await db`
-  insert into runs (finished_at, clustered) values (now(), ${todo.length}) returning id`) as unknown as { id: number }[];
+  insert into runs (finished_at, clustered) values (now(), ${capped.length}) returning id`) as unknown as { id: number }[];
 
 const text = await (await fetch(status.results_url, { headers: H })).text();
 let ok = 0, empty = 0, inTok = 0, outTok = 0;

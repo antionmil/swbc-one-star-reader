@@ -1,0 +1,44 @@
+name: group complaints
+
+# The only job on this site that spends money.
+#
+# A pair costs about $0.004 to group at Batch API rates — measured, not
+# guessed: 21 pairs cost $0.07, 35 cost $0.15. The collector opens roughly 700
+# new app/storefront pairs a day, so grouping every one the moment it becomes
+# readable would run about $2.80 a day.
+#
+# CLUSTER_LIMIT is the dial. 8 an hour is 192 a day and about $0.77 — under the
+# dollar-a-day ceiling this build was given. Raise it and the shelf fills
+# faster for proportionally more money. Nothing else changes.
+#
+# Never-published pairs go first, biggest app first, so the budget buys names a
+# reader recognises before it buys the long tail.
+on:
+  schedule:
+    - cron: "40 * * * *"
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "pairs to group this run (8 ≈ $0.03)"
+        default: "8"
+
+concurrency:
+  group: cluster
+  cancel-in-progress: false
+
+jobs:
+  cluster:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.18.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm tsx --conditions=react-server scripts/cluster.mts --stale
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CLUSTER_LIMIT: ${{ github.event.inputs.limit || '8' }}
