@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { appSlug, snapshot } from "@/lib/read";
+import { snapshot } from "@/lib/read";
 import { ago, numericDate, storeName } from "@/lib/when";
 import { sql } from "@/lib/db";
 import { Sheet } from "@/components/Sheet";
@@ -72,13 +72,13 @@ export default async function Today() {
               ? `Nothing yet — there is one morning of readings, taken ${
                   s.days[0] ? numericDate(s.days[0]) : "today"
                 }. A change needs two, so the first comparison lands tomorrow at 06:00 UTC.`
-              : "Not one rating moved by a hundredth of a star since yesterday. On twenty apps with millions of ratings each, that is the normal result."}
+              : "Not one rating moved by a hundredth of a star since yesterday. On apps with millions of ratings each, that is the normal result."}
           </p>
         ) : (
           <div className="mt-3 divide-y divide-rule-soft">
             {moves.map((m) => (
               <div key={`${m.app.id}-${m.store}`} className="flex flex-wrap items-baseline gap-x-3 py-2.5">
-                <Link href={`/a/${appSlug(m.app.name)}`} className="text-[16px] font-semibold hover:text-loud">
+                <Link href={`/a/${s.slugs.get(m.app.id)}`} className="text-[16px] font-semibold hover:text-loud">
                   {m.app.name}
                 </Link>
                 <span className="font-mono text-[11px] text-faint">{storeName(m.store)}</span>
@@ -108,7 +108,7 @@ export default async function Today() {
               <div key={`${app.id}-${store}-${cl.key}`} className="py-2.5">
                 <p className="text-[16px] font-semibold">{cl.label}</p>
                 <p className="mt-0.5 font-mono text-[11px] text-faint">
-                  <Link href={`/a/${appSlug(app.name)}`} className="text-link hover:underline">
+                  <Link href={`/a/${s.slugs.get(app.id)}`} className="text-link hover:underline">
                     {app.name}
                   </Link>{" "}
                   · {storeName(store)} · {cl.n} reviews

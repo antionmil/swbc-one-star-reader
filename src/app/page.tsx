@@ -48,7 +48,7 @@ export default async function Wire() {
     return {
       id: app.id,
       name: app.name,
-      slug: appSlug(app.name),
+      slug: s.apps.find((a) => a.app.id === app.id)!.slug,
       artwork: s.apps.find((a) => a.app.id === app.id)?.app.artwork ?? null,
       score: store.rating?.average ?? null,
       ratings: store.rating?.count ?? null,
@@ -62,7 +62,7 @@ export default async function Wire() {
   });
 
   return (
-    <Sheet home right={`${s.totals.apps} apps · ${s.totals.negative.toLocaleString("en-GB")} bad reviews read`}>
+    <Sheet home right={`${s.totals.apps.toLocaleString("en-GB")} apps · ${s.totals.negative.toLocaleString("en-GB")} bad reviews read`}>
       <h1 className="mt-8 max-w-[19ch] text-[30px] leading-[1.08] font-bold tracking-[-0.02em] sm:text-[38px]">
         What people actually hate about the apps they use every day.
       </h1>
@@ -115,8 +115,8 @@ function Empty() {
         Nothing has been read yet.
       </h1>
       <p className="mt-3.5 max-w-[56ch] text-[16px] leading-relaxed text-muted">
-        Twenty apps, their one- and two-star reviews, and the complaints that keep coming
-        back. Nothing is published until a full pass has finished.
+        App Store apps, their one- and two-star reviews, and the complaints that keep
+        coming back. Nothing is published until a full pass has finished.
       </p>
       <p className="mt-3.5 text-[16px] text-muted">
         <Link href="/method" className="text-link underline underline-offset-2">

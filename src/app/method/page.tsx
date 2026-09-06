@@ -39,10 +39,30 @@ export default async function Method() {
         </p>
         <p>
           <strong className="font-semibold">Scores are read in four storefronts</strong> —
-          the United States, Germany, Britain and France — because the ratings endpoint is
-          not rationed. Complaints exist only where written reviews have been collected, so
-          an app can show four scores and two sets of complaints. Britain and France are
-          filling from 6 September; every storefront says how much it has read.
+          the United States, Germany, Britain and France. Complaints exist only where
+          written reviews have been collected, so an app can show four scores and two sets
+          of complaints. Britain and France are filling from 6 September; every storefront
+          says how much it has read.
+        </p>
+        <p>
+          <strong className="font-semibold">
+            {s.totals.apps.toLocaleString("en-GB")} apps are watched, {s.read} are read
+          </strong>
+          , and the gap between those two numbers is the throttle. The watchlist comes from
+          Apple&rsquo;s own charts — every genre, every storefront — so most apps a reader
+          searches for are already here with a live score. Reading an app&rsquo;s complaints
+          needs its review feed, and that is rationed to about one page per address every
+          ten minutes. You can ask for any app; it is watched from that moment and read when
+          a collector reaches it.
+        </p>
+        <p>
+          The score endpoint is rationed too, which took a measurement to find out. It
+          answers happily for a few hundred apps. Asked 45,000 times from one address it
+          starts refusing about three requests in four, and slowing down does not help —
+          five a second and forty a second were refused at the same rate. So scores are
+          collected on a rotation across several addresses, a few thousand an hour, and a
+          watched app says plainly that its score has not come round yet rather than showing
+          a stale one.
         </p>
       </Block>
 

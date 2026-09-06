@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { sql } from "@/lib/db";
-import { appSlug } from "@/lib/read";
+import { snapshot } from "@/lib/read";
 import { artwork } from "@/lib/artwork";
 import { ago } from "@/lib/when";
 import { Sheet } from "@/components/Sheet";
@@ -19,6 +19,7 @@ type Row = {
 };
 
 export default async function Requested() {
+  const { slugs } = await snapshot();
   const rows = (await sql()`
     select a.id, a.name, a.artwork,
            count(r.id)::int as asked,
@@ -56,8 +57,8 @@ export default async function Requested() {
         </p>
       ) : (
         <>
-          <Section title={`Waiting to be read (${waiting.length})`} rows={waiting} />
-          {done.length > 0 && <Section title={`Asked for and read (${done.length})`} rows={done} />}
+          <Section title={`Waiting to be read (${waiting.length})`} rows={waiting} slugs={slugs} />
+          {done.length > 0 && <Section title={`Asked for and read (${done.length})`} rows={done} slugs={slugs} />}
         </>
       )}
 
@@ -70,7 +71,7 @@ export default async function Requested() {
   );
 }
 
-function Section({ title, rows }: { title: string; rows: Row[] }) {
+function Section({ title, rows, slugs }: { title: string; rows: Row[]; slugs: Map<string, string> }) {
   return (
     <section className="mt-9">
       <h2 className="border-b border-rule pb-2 text-[15px] font-bold">{title}</h2>
@@ -85,7 +86,7 @@ function Section({ title, rows }: { title: string; rows: Row[] }) {
             )}
             <span className="min-w-0 flex-1">
               {r.read ? (
-                <Link href={`/a/${appSlug(r.name)}`} className="block truncate text-[15px] font-semibold hover:text-loud">
+                <Link href={`/a/${slugs.get(r.id)}`} className="block truncate text-[15px] font-semibold hover:text-loud">
                   {r.name}
                 </Link>
               ) : (

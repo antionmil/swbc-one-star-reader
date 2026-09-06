@@ -16,32 +16,110 @@ import { sql } from "@/lib/db";
  * usually none of them.
  */
 
+/**
+ * Gives every app without one a unique URL.
+ *
+ * Runs on the daily cron and after any import. The rule is: the slug a name
+ * wants, and if another app already holds it, that slug with the Apple id on
+ * the end. Whoever asks first keeps the plain one, so an app's address never
+ * changes underneath a link that has already been shared.
+ *
+ * The uniqueness is the database's, not this function's — a unique index on
+ * apps.slug — so two of these running at once cannot both hand out
+ * "mcdonald-s". The second insert loses and takes the suffix.
+ */
+export async function fillSlugs() {
+  const db = sql();
+  const todo = (await db`
+    select id, name from apps where slug is null order by added_at, id
+    limit 20000`) as unknown as { id: string; name: string }[];
+  let plain = 0;
+  let suffixed = 0;
+  for (const a of todo) {
+    const base =
+      a.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) ||
+      `app-${a.id}`;
+    const [got] = (await db`
+      update apps set slug = ${base} where id = ${a.id}
+        and not exists (select 1 from apps o where o.slug = ${base})
+      returning id`) as unknown as { id: string }[];
+    if (got) { plain++; continue; }
+    await db`update apps set slug = ${`${base}-${a.id}`} where id = ${a.id}`;
+    suffixed++;
+  }
+  return { named: plain + suffixed, plain, suffixed };
+}
+
 export async function collectRatings() {
   const db = sql();
-  /* EVERY app, not only the ones whose reviews we have read. 421 of the 441
-     are watched-only, and their whole value is a live rating — which they were
-     not getting, because this asked the reviews table which storefronts to
-     read and a watched app has no reviews. */
+  /* A rotation with a budget, because both ends of this job have a ceiling.
+   *
+   * Apple's lookup endpoint is the tighter one, and it was measured rather
+   * than assumed. It answers a datacentre address happily for a few hundred
+   * apps. At 45,000 requests from one address it starts refusing: roughly
+   * three in four come back 403, and slowing down does not help — five a
+   * second and forty a second were refused at the same rate. So this asks a
+   * bounded number of questions, retries a refusal once after a pause, and
+   * leaves the rest for the next firing.
+   *
+   * The pairs come from `watch`, not from every app crossed with every
+   * storefront. An app that charted only in France is not sold in the United
+   * States, and 27,000 of the 47,000 questions the first version asked could
+   * never have had an answer.
+   *
+   * Order of service:
+   *   1. pairs whose reviews we have read — every firing, because those are
+   *      the pages that show a delta and a delta needs yesterday and today;
+   *   2. everything else, longest-untried first, so the whole watchlist comes
+   *      round rather than the same thousand apps being refreshed forever.
+   *
+   * `tried_at` moves whatever Apple answers. A pair Apple refuses must go to
+   * the back of the queue too, or it blocks the rotation on the next firing
+   * and every firing after that. */
+  const BUDGET = Number(process.env.RATINGS_BUDGET ?? 600);
+  /* Shards, so four runners can hold four slices of the queue without four
+     copies of the same slice. A fresh runner is a fresh address, which is the
+     only lever there is against a per-address refusal. Unsharded by default:
+     the Vercel cron is one caller and takes the whole ordering. */
+  const SHARD = Number(process.env.RATINGS_SHARD ?? 0);
+  const SHARDS = Number(process.env.RATINGS_SHARDS ?? 1);
   const rows = (await db`
-    select a.id as app_id, s.store
-    from apps a cross join (values ('us'), ('de'), ('gb'), ('fr')) as s(store)
-    order by a.id, s.store`) as unknown as { app_id: string; store: string }[];
+    select w.app_id, w.store
+    from watch w
+    where abs(hashtext(w.app_id || '|' || w.store)) % ${SHARDS} = ${SHARD}
+    order by exists(select 1 from reviews v where v.app_id = w.app_id) desc,
+             w.tried_at asc nulls first, w.app_id, w.store
+    limit ${BUDGET}`) as unknown as { app_id: string; store: string }[];
   const day = new Date().toISOString().slice(0, 10);
-  /* Eight at a time. 1,764 lookups one after another is minutes, and the
-     function ceiling is five of them. */
+
   let ok = 0;
+  let refused = 0;
+  let absent = 0;
   let i = 0;
-  const workers = Array.from({ length: 8 }, async () => {
-    while (i < rows.length) {
-      const r = rows[i++];
-      await one(r);
-    }
+  /* Six at a time. The refusals are not rate-driven, so a bigger number buys
+     nothing and only makes the site a worse guest. */
+  const workers = Array.from({ length: 6 }, async () => {
+    while (i < rows.length) await one(rows[i++]);
   });
 
   async function one(r: { app_id: string; store: string }) {
-    const l = await lookup(r.app_id, r.store);
-    if (!l) return;
+    let l = await lookup(r.app_id, r.store);
+    if (!l) {
+      await new Promise((s) => setTimeout(s, 1500));
+      l = await lookup(r.app_id, r.store);
+    }
+    await db`update watch set tried_at = now()
+             where app_id = ${r.app_id} and store = ${r.store}`;
+    if (!l) {
+      /* Refused or not sold there — indistinguishable from here, and both mean
+         the same thing to the site: no score today. Nothing is written, so a
+         score we already hold stays on the page instead of being replaced by a
+         blank. */
+      refused++;
+      return;
+    }
     if (l.artwork) await db`update apps set artwork = ${l.artwork} where id = ${r.app_id}`;
+    if (l.average == null) { absent++; return; }
     await db`
       insert into ratings (app_id, store, day, average, count, version, released_at)
       values (${r.app_id}, ${r.store}, ${day}, ${l.average}, ${l.count}, ${l.version},
@@ -53,7 +131,18 @@ export async function collectRatings() {
   }
 
   await Promise.all(workers);
-  return { asked: rows.length, stored: ok, day };
+
+  /* Keep thirty days and drop the rest. The site shows today and yesterday and
+     /today needs both. The database is half a gigabyte and a year of history
+     nobody reads would fill it. */
+  await db`delete from ratings
+           where day < ${new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10)}`;
+
+  const [{ pairs, behind }] = (await db`
+    select count(*)::int as pairs,
+           count(*) filter (where tried_at is null or tried_at < now() - interval '1 day')::int as behind
+    from watch`) as unknown as { pairs: number; behind: number }[];
+  return { asked: rows.length, stored: ok, refused, absent, pairs, behind, day };
 }
 
 async function clusterOne(app_id: string, name: string, store: string, runId: number) {

@@ -15,12 +15,16 @@ export const revalidate = 3600;
  *  shared link pointed at. */
 export async function generateStaticParams() {
   const s = await snapshot();
-  return s.apps.map((a) => ({ slug: appSlug(a.app.name) }));
+  /* Only the apps we have actually read. The watchlist is 11,798 apps and
+     prerendering every one of them is a build that does not finish; the rest
+     render on first request and are cached from then on, which is what
+     `revalidate` above is for. */
+  return s.apps.filter((a) => a.stores.some((st) => st.clusters.length)).map((a) => ({ slug: a.slug }));
 }
 
 async function find(slug: string) {
   const s = await snapshot();
-  const view = s.apps.find((a) => appSlug(a.app.name) === slug);
+  const view = s.apps.find((a) => a.slug === slug);
   return view ? { s, view } : null;
 }
 
@@ -46,6 +50,23 @@ export default async function AppPage({ params }: { params: Promise<{ slug: stri
       <h1 className="mt-8 text-[30px] leading-[1.08] font-bold tracking-[-0.02em] sm:text-[36px]">
         {view.app.name}
       </h1>
+
+      {/* An app with no storefront section at all: on the watchlist, but its
+          score has not come round in the rotation yet. 421 of 441 apps rendered
+          as a bare title once already for the same reason — a page that shows
+          only a heading reads as broken, not as young. */}
+      {view.stores.length === 0 && (
+        <p className="mt-6 max-w-[58ch] text-[15px] leading-relaxed text-muted">
+          This app is on the watchlist and nothing has been read yet. Its rating
+          arrives on the next pass, usually within a day; its complaints take
+          longer, because Apple rations the review feed to about one page per
+          address every ten minutes.{" "}
+          <Link href="/method" className="text-link underline underline-offset-2">
+            How that works
+          </Link>
+          .
+        </p>
+      )}
 
       <div className="mt-8 space-y-10">
         {view.stores.map((st) => {

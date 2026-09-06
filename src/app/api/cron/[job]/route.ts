@@ -1,7 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { fetchPage } from "@/lib/apple";
-import { collectRatings, reclusterStale } from "@/lib/jobs";
+import { collectRatings, fillSlugs, reclusterStale } from "@/lib/jobs";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -16,13 +16,14 @@ export const dynamic = "force-dynamic";
  */
 const JOBS: Record<string, () => Promise<unknown>> = {
   daily: async () => {
+    const slugs = await fillSlugs();
     const ratings = await collectRatings();
     const clusters = await reclusterStale();
     /* Push it out now rather than waiting for each page's hour to expire. Day 4
        shipped a corrected figure, watched the deployment go READY, and served
        the old number for an hour. */
     revalidatePath("/", "layout");
-    return { ratings, clusters };
+    return { slugs, ratings, clusters };
   },
   /* Does Apple serve THIS address? GitHub's runners get nothing and two other
      cloud networks get nothing, but each network has to be measured rather

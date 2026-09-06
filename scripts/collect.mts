@@ -29,18 +29,30 @@ const db = sql();
 const [{ id: runId }] = (await db`insert into runs default values returning id`) as unknown as { id: number }[];
 
 type Row = { app_id: string; name: string; store: string };
-/* The apps we actually read, in every storefront we track — not just the
-   storefronts that already have reviews. Britain and France start empty and
-   fill from here; without this they would never be fetched at all, because the
-   list used to be built from the reviews table itself.
-   Least recently tried first, so the rotation is even rather than alphabetical. */
+/* Who gets read, and in what order.
+ *
+ * Two kinds of app qualify: one somebody asked for, and one we have already
+ * read. Nothing else — the watchlist is 11,798 apps and Apple lets through
+ * about six review pages an hour, so reading the charts at random would mean
+ * one page each and a complaint for nobody.
+ *
+ * A requested app that has never been read goes first, always. That is the
+ * whole promise of the request box, and it is the only queue on this site a
+ * person is actually waiting in. After that, least recently tried, so the
+ * rotation is even rather than alphabetical.
+ *
+ * Storefronts come from `watch` rather than from a cross join: a requested app
+ * is watched in all four, a charted one only where it charted, and an app we
+ * have read keeps every storefront it has reviews in. */
 const targets = (await db`
-  select a.id as app_id, a.name, s.store
-  from (select distinct app_id from reviews) r
-  join apps a on a.id = r.app_id
-  cross join (values ('us'), ('de'), ('gb'), ('fr')) as s(store)
-  order by coalesce((select max(f.at) from fetches f
-    where f.app_id = a.id and f.store = s.store), '1970-01-01') asc
+  select a.id as app_id, a.name, w.store
+  from watch w
+  join apps a on a.id = w.app_id
+  where exists (select 1 from requests q where q.app_id = a.id)
+     or exists (select 1 from reviews v where v.app_id = a.id)
+  order by (not exists (select 1 from reviews v where v.app_id = a.id)) desc,
+           coalesce((select max(f.at) from fetches f
+             where f.app_id = a.id and f.store = w.store), '1970-01-01') asc
   limit ${PAIRS * SHARDS}`) as unknown as Row[];
 
 /* Every SHARDS-th row, offset by this runner's index. */

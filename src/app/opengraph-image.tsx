@@ -56,7 +56,7 @@ export default async function OG() {
         )}
 
         <div style={{ display: "flex", fontSize: 26, color: "#55565a" }}>
-          {s.totals.apps} apps · every count is real · every quote is a real review
+          {s.totals.apps.toLocaleString("en-GB")} apps watched · {s.read} read · every quote is a real review
         </div>
       </div>
     ),

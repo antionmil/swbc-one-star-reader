@@ -23,6 +23,10 @@ export type Hit = {
   /** "read" = complaints are published. "watched" = we have it, no reviews
    *  read yet. "new" = not in the census at all. */
   state: "read" | "watched" | "new";
+  /** The app's real URL, from the database. Never derive one from the name in
+   *  the browser: five apps here are called McDonald's. Null for a "new" hit,
+   *  which has no page to link to yet. */
+  slug: string | null;
 };
 
 export async function GET(req: NextRequest) {
@@ -31,7 +35,7 @@ export async function GET(req: NextRequest) {
 
   const db = sql();
   const mine = (await db`
-    select a.id, a.name, a.artwork,
+    select a.id, a.name, a.artwork, a.slug,
            (select r.average from ratings r where r.app_id = a.id order by r.day desc limit 1) as average,
            (select r.count   from ratings r where r.app_id = a.id order by r.day desc limit 1) as count,
            exists (select 1 from clusters c where c.app_id = a.id) as read
@@ -47,6 +51,7 @@ export async function GET(req: NextRequest) {
 
   const hits: Hit[] = mine.map((m) => ({
     id: m.id, name: m.name, artwork: m.artwork, average: m.average, count: m.count,
+    slug: m.slug,
     state: m.read ? "read" : "watched",
   }));
 
@@ -68,6 +73,7 @@ export async function GET(req: NextRequest) {
             artwork: r.artworkUrl100 ? String(r.artworkUrl100) : null,
             average: typeof r.averageUserRating === "number" ? r.averageUserRating : null,
             count: typeof r.userRatingCount === "number" ? r.userRatingCount : null,
+            slug: null,
             state: "new",
           });
           if (hits.length >= 10) break;

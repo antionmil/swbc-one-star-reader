@@ -1,0 +1,42 @@
+name: read scores
+
+# Apple's lookup endpoint refuses about three requests in four once one address
+# has asked it tens of thousands of times, and asking more slowly does not help
+# — five a second and forty a second were refused at the same rate. The lever
+# is the address, not the pace. A scheduled Action gets a fresh runner and a
+# fresh address on every firing, and four runners get four of them.
+#
+# 20,124 app/storefront pairs, four shards of 900, hourly: the whole watchlist
+# comes round in about six hours even if half the questions are refused.
+#
+# The daily Vercel cron still runs — it is what rebuilds the pages.
+on:
+  schedule:
+    - cron: "20 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: ratings
+  cancel-in-progress: false
+
+jobs:
+  ratings:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.18.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm tsx --conditions=react-server scripts/ratings.mts
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          RATINGS_BUDGET: "900"
+          RATINGS_SHARD: ${{ matrix.shard }}
+          RATINGS_SHARDS: "4"

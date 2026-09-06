@@ -8,8 +8,9 @@ export default function NotFound() {
         Not in this watchlist.
       </h1>
       <p className="mt-3.5 max-w-[56ch] text-[16px] leading-relaxed text-muted">
-        Twenty apps are read here, and this is not one of them. The list is fixed so that
-        &ldquo;what moved&rdquo; means something.
+        Nearly twelve thousand apps are watched here, and this is not one of them.
+        Search for it on the wire — if Apple has it, you can ask for it, and it is
+        watched from that moment.
       </p>
       <p className="mt-3.5 text-[16px] text-muted">
         <Link href="/" className="text-link underline underline-offset-2">Back to the wire</Link>

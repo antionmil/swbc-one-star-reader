@@ -112,7 +112,7 @@ export function AppRow({ view, quotes }: { view: AppView; quotes: Map<string, Qu
         </div>
 
         <p className="mt-3 font-mono text-[11px]">
-          <Link href={`/a/${appSlug(view.app.name)}`} className="text-link hover:underline">
+          <Link href={`/a/${view.slug}`} className="text-link hover:underline">
             {store.clusters.length > 3
               ? `${store.clusters.length - 3} more complaint${store.clusters.length - 3 === 1 ? "" : "s"}, every quote and every storefront →`
               : "Every quote and every storefront →"}

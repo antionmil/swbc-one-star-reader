@@ -1,4 +1,4 @@
-import { pgTable, text, integer, timestamp, jsonb, serial, primaryKey, index, real } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, timestamp, jsonb, serial, primaryKey, index, uniqueIndex, real } from "drizzle-orm/pg-core";
 
 /**
  * The watchlist, the reviews, and what the model made of them.
@@ -21,8 +21,22 @@ export const apps = pgTable("apps", {
   /** How this app got here: "chart" for the imported top lists, "seed" for the
    *  twenty read on day one, "request" for one somebody asked for. */
   source: text("source").notNull().default("chart"),
+  /**
+   * The app's URL, decided once and stored.
+   *
+   * It used to be derived from the name wherever a link was drawn, which was
+   * fine while the watchlist was 441 apps and every name was unique. At 11,798
+   * it is neither: 40 names collide — there are five McDonald's — and 62 are
+   * written entirely in Chinese, Arabic or Japanese and reduce to an empty
+   * string. Deriving the link in the browser, as the search box did, sent a
+   * reader to another company's page.
+   *
+   * Unique, so the database refuses a second app the same address, and the
+   * loser takes its Apple id as a suffix.
+   */
+  slug: text("slug"),
   added_at: timestamp("added_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [uniqueIndex("apps_slug_idx").on(t.slug)]);
 
 export const reviews = pgTable("reviews", {
   app_id: text("app_id").notNull(),
@@ -169,3 +183,31 @@ export const visitTotals = pgTable("visit_totals", {
   day: text("day").primaryKey(),
   n: integer("n").notNull().default(0),
 });
+
+/**
+ * Which storefronts an app is actually watched in.
+ *
+ * This exists because of a measurement. Apple's lookup endpoint answers a
+ * datacentre address and needs no throttling for a few hundred apps, so the
+ * first version of the ratings job simply asked about every app in all four
+ * storefronts. At 441 apps that is 1,764 questions a day and Apple answers
+ * every one. At 11,798 apps it is 47,192, and Apple starts refusing: about
+ * three in four requests come back 403 at any rate from five a second to
+ * forty, and the refusal has nothing to do with how fast you ask.
+ *
+ * Most of those questions were pointless anyway. An app that charted only in
+ * France is not sold in the United States, and asking about it every night
+ * spent the address's budget on a row that would never exist. So the chart
+ * import records the storefront it saw the app in, and the ratings job asks
+ * only about pairs that can answer.
+ */
+export const watch = pgTable("watch", {
+  app_id: text("app_id").notNull(),
+  store: text("store").notNull(),
+  /** "chart", "seed", "request" — the same vocabulary as apps.source. */
+  source: text("source").notNull().default("chart"),
+  added_at: timestamp("added_at", { withTimezone: true }).notNull().defaultNow(),
+  /** When the ratings rotation last asked Apple about this pair, whatever the
+   *  answer. A pair Apple refuses must still move to the back of the queue. */
+  tried_at: timestamp("tried_at", { withTimezone: true }),
+}, (t) => [primaryKey({ columns: [t.app_id, t.store] }), index("watch_tried_idx").on(t.tried_at)]);

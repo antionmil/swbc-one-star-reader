@@ -11,10 +11,8 @@ type Hit = {
   average: number | null;
   count: number | null;
   state: "read" | "watched" | "new";
+  slug: string | null;
 };
-
-const slug = (name: string) =>
-  name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
 
 /**
  * Find your app.
@@ -112,8 +110,8 @@ export function Find() {
                 </span>
               </span>
 
-              {h.state === "read" ? (
-                <Link href={`/a/${slug(h.name)}`} className="shrink-0 font-mono text-[11px] text-link hover:underline">
+              {h.state === "read" && h.slug ? (
+                <Link href={`/a/${h.slug}`} className="shrink-0 font-mono text-[11px] text-link hover:underline">
                   read →
                 </Link>
               ) : said[h.id] ? (

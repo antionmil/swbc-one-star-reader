@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { lookup } from "@/lib/apple";
+import { fillSlugs } from "@/lib/jobs";
 import { sql } from "@/lib/db";
 
 export const runtime = "nodejs";
@@ -60,6 +61,9 @@ export async function POST(req: NextRequest) {
       name = l.name;
       await db`insert into apps (id, name, artwork, source) values (${id}, ${l.name}, ${l.artwork}, 'request')
                on conflict (id) do nothing`;
+      /* Its URL, now — the queue page links to it as soon as it is read, and
+         waiting for the nightly job to name it would leave a dead link. */
+      await fillSlugs();
       const day = new Date().toISOString().slice(0, 10);
       await db`
         insert into ratings (app_id, store, day, average, count, version, released_at)
@@ -67,6 +71,14 @@ export async function POST(req: NextRequest) {
                 ${l.released_at ? new Date(l.released_at).toISOString() : null})
         on conflict (app_id, store, day) do nothing`;
     }
+
+    /* Watched in all four storefronts, and at the front of the rotation.
+       Somebody asking for an app never says which country they are in, and a
+       requested app is the one case where the wait is visible to a person. */
+    await db`insert into watch (app_id, store, source)
+             select ${id}, s.store, 'request'
+             from (values ('us'), ('de'), ('gb'), ('fr')) as s(store)
+             on conflict (app_id, store) do nothing`;
 
     await db`insert into requests (app_id, who) values (${id}, ${who})`;
     const [{ asked }] = (await db`
