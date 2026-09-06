@@ -18,7 +18,8 @@
     "collect": "tsx --conditions=react-server scripts/collect.mts",
     "qa": "tsx scripts/contrast.mts",
     "qa:cron": "tsx qa/cron.test.mts",
-    "charts": "tsx --conditions=react-server scripts/import-charts.mts"
+    "charts": "tsx --conditions=react-server scripts/import-charts.mts",
+    "translate": "tsx --conditions=react-server scripts/translate.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",

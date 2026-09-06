@@ -5,6 +5,7 @@ import { SAMPLE } from "@/lib/cluster";
 import { appSlug, snapshot } from "@/lib/read";
 import { ago, numericDate, storeName } from "@/lib/when";
 import { Complaint } from "@/components/Complaint";
+import { Quote } from "@/components/Quote";
 import { Sheet } from "@/components/Sheet";
 
 export const revalidate = 3600;
@@ -79,7 +80,7 @@ export default async function AppPage({ params }: { params: Promise<{ slug: stri
                   {st.total > 0 && (
                     <>
                       {st.rating?.version ? " · " : ""}
-                      {st.read} of the {st.total} written reviews are one or two stars
+                      {st.read} of the last {st.total} written reviews are one or two stars
                     </>
                   )}
                 </span>
@@ -99,21 +100,7 @@ export default async function AppPage({ params }: { params: Promise<{ slug: stri
                       <div className="mt-2.5 space-y-2 border-l-[3px] border-transparent pl-3.5">
                         {c.quotes.map((q) => {
                           const quote = s.quotes.get(q);
-                          if (!quote) return null;
-                          return (
-                            <p key={q} className="text-[14px] leading-relaxed">
-                              &ldquo;
-                              {(quote.title ? `${quote.title} — ` : "") +
-                                quote.body.replace(/\s+/g, " ").trim().slice(0, 240)}
-                              &rdquo;
-                              <span className="font-mono text-[11px] text-faint">
-                                {" "}
-                                — {"★".repeat(quote.rating)}
-                                {"☆".repeat(5 - quote.rating)}
-                                {quote.written_at ? ` · ${numericDate(quote.written_at)}` : ""}
-                              </span>
-                            </p>
-                          );
+                          return quote ? <Quote key={q} q={quote} /> : null;
                         })}
                       </div>
                     </div>
@@ -122,8 +109,13 @@ export default async function AppPage({ params }: { params: Promise<{ slug: stri
               )}
 
               <p className="mt-4 font-mono text-[11px] leading-relaxed text-faint">
-                Read from the {read} most recent negative reviews Apple gave us. Newest
-                review {ago(st.newest)}
+                Apple publishes the most recent written reviews, up to five hundred, and
+                that is what was read — not a search for bad ones.{" "}
+                <Link href="/method#written" className="text-link hover:underline">
+                  Why so many of them are angry
+                </Link>
+                . The complaints above come from the {read} most recent negative ones.
+                Newest review {ago(st.newest)}
                 {st.newest ? ` (${numericDate(st.newest)})` : ""}, last collected{" "}
                 {ago(st.last_collected)}.
               </p>

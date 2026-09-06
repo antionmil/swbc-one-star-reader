@@ -1,4 +1,5 @@
-import type { Cluster, Quote } from "@/lib/read";
+import type { Cluster, Quote as QuoteRow } from "@/lib/read";
+import { Quote } from "@/components/Quote";
 
 /**
  * One complaint, as a headline.
@@ -17,7 +18,7 @@ export function Complaint({
 }: {
   c: Cluster;
   rank: number;
-  quote?: Quote;
+  quote?: QuoteRow;
   read: number;
   big?: boolean;
 }) {
@@ -35,12 +36,9 @@ export function Complaint({
       </p>
       <p className="mt-1.5 text-[14px] leading-relaxed text-muted">{c.blurb}</p>
       {quote && (
-        <p className="mt-2 text-[14px] leading-relaxed">
-          &ldquo;{(quote.title || quote.body).replace(/\s+/g, " ").trim().slice(0, 160)}&rdquo;
-          <span className="font-mono text-[11px] text-faint">
-            {" "}— {"★".repeat(quote.rating)}{"☆".repeat(5 - quote.rating)}
-          </span>
-        </p>
+        <div className="mt-2">
+          <Quote q={quote} clip={170} />
+        </div>
       )}
     </div>
   );

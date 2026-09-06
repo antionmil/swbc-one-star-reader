@@ -46,7 +46,7 @@ export default async function Method() {
         </p>
       </Block>
 
-      <Block title="Why the score is 4.6 and the reviews look furious">
+      <Block id="written" title="Why the score is 4.6 and the reviews look furious">
         <p>
           They count different things. Apple&rsquo;s score averages{" "}
           <strong className="font-semibold">every rating</strong> — 18.5 million of them
@@ -55,7 +55,8 @@ export default async function Method() {
         </p>
         <p>
           The public feed only hands out <strong className="font-semibold">written
-          reviews</strong>, a few hundred of the most recent. People who bother to type
+          reviews</strong> — the five hundred most recent, in the order they were written.
+          It is not a search for bad ones, and nothing here filters for them either. People who bother to type
           are angrier than people who tap. Across everything read here the average written
           review is <strong className="font-semibold">3.42 stars</strong> while
           Apple&rsquo;s own score for the same apps averages{" "}
@@ -150,9 +151,9 @@ export default async function Method() {
   );
 }
 
-function Block({ title, children }: { title: string; children: React.ReactNode }) {
+function Block({ id, title, children }: { id?: string; title: string; children: React.ReactNode }) {
   return (
-    <section className="mt-9">
+    <section id={id} className="mt-9 scroll-mt-6">
       <h2 className="border-b border-rule pb-2 text-[15px] font-bold">{title}</h2>
       <div className="mt-3 max-w-[60ch] space-y-3 text-[15px] leading-relaxed text-muted">{children}</div>
     </section>

@@ -83,8 +83,9 @@ export function AppRow({ view, quotes }: { view: AppView; quotes: Map<string, Qu
 
       <div className="pb-5 pl-[52px]">
         <p className="font-mono text-[11px] leading-relaxed text-faint">
-          {storeName(store.store)} · {store.read} of the {store.total} written reviews
-          Apple gave us are one or two stars
+          {storeName(store.store)} · {store.read} of the last {store.total} written
+          reviews are one or two stars — Apple publishes the most recent ones, not a
+          selection
           {view.stores.length > 1 &&
             ` · also ${view.stores.slice(1).map((o) => storeName(o.store)).join(", ")}`}
         </p>

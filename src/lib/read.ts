@@ -13,7 +13,12 @@ export type Cluster = {
   app_id: string; store: string; key: string; label: string; blurb: string;
   n: number; share: number; quotes: string[]; first_run: number; run_id: number;
 };
-export type Quote = { review_id: string; title: string; body: string; rating: number; written_at: string | null };
+export type Quote = {
+  review_id: string; title: string; body: string; rating: number;
+  written_at: string | null;
+  /** Filled by scripts/translate.mts for the reviews the site quotes. */
+  lang: string | null; title_en: string | null; body_en: string | null;
+};
 export type Rating = { app_id: string; store: string; day: string; average: number | null; count: number | null; version: string | null; released_at: string | null };
 export type App = { id: string; name: string; genre: string | null; artwork: string | null };
 
@@ -69,7 +74,8 @@ async function load(): Promise<Snapshot> {
        from ratings order by day desc` as unknown as Promise<Rating[]>,
     db`select app_id, store, max(written_at)::text as newest, max(first_seen)::text as collected
        from reviews group by app_id, store` as unknown as Promise<{ app_id: string; store: string; newest: string | null; collected: string | null }[]>,
-    db`select review_id, title, body, rating, written_at::text as written_at from reviews
+    db`select review_id, title, body, rating, lang, title_en, body_en,
+              written_at::text as written_at from reviews
        where review_id in (select jsonb_array_elements_text(quotes) from clusters)` as unknown as Promise<Quote[]>,
     db`select distinct day from ratings order by day desc` as unknown as Promise<{ day: string }[]>,
   ]);

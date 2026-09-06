@@ -36,6 +36,11 @@ export const reviews = pgTable("reviews", {
    *  trip into the database. The backfill kept the feed's own order; the cron
    *  writes 0 for anything it fetches, which is newer than everything. */
   seq: integer("seq").notNull().default(0),
+  /** Set once the review has been through translation. "en" means it was
+   *  already English and the _en columns are a copy. */
+  lang: text("lang"),
+  title_en: text("title_en"),
+  body_en: text("body_en"),
   /** When Apple says it was written. */
   written_at: timestamp("written_at", { withTimezone: true }),
   /** When WE first saw it. The gap between the two is the honest measure of
